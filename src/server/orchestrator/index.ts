@@ -1,4 +1,4 @@
-import { createOrchestratorModel } from "./model/mock-orchestrator-model";
+import { createOrchestratorModel } from "./model/deepseek-orchestrator-model";
 import type {
   OrchestratorInput,
   OrchestratorPlan,

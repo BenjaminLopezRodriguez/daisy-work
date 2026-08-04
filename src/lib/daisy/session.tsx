@@ -1,26 +1,45 @@
 "use client";
 
-import { createContext, useContext, useMemo, type ReactNode } from "react";
-import { CURRENT_USER_ID, seedUsers } from "@/server/mocks/seed";
-import { createMockServices, type DaisyServices } from "@/server/services";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  type ReactNode,
+} from "react";
+
 import type { User } from "@/domain";
+import { api } from "@/trpc/react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export type AppSession = {
   currentUser: User;
-  services: DaisyServices;
 };
 
 const AppSessionContext = createContext<AppSession | null>(null);
 
 export function AppSessionProvider({ children }: { children: ReactNode }) {
-  const value = useMemo<AppSession>(() => {
-    const currentUser =
-      seedUsers.find((u) => u.id === CURRENT_USER_ID) ?? seedUsers[0]!;
-    return {
-      currentUser,
-      services: createMockServices(),
-    };
-  }, []);
+  const { data: user, isLoading, isError } = api.me.get.useQuery();
+
+  const value = useMemo<AppSession | null>(() => {
+    if (!user) return null;
+    return { currentUser: user };
+  }, [user]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center p-6">
+        <Skeleton className="h-8 w-40" />
+      </div>
+    );
+  }
+
+  if (isError || !value) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center p-6 text-sm text-muted-foreground">
+        Couldn’t load your account. Check the database connection.
+      </div>
+    );
+  }
 
   return (
     <AppSessionContext.Provider value={value}>

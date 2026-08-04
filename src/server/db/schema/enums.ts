@@ -25,6 +25,7 @@ export const workModeEnum = pgEnum("work_mode", [
   "remote",
   "local",
   "on_site",
+  "hybrid",
 ]);
 
 export const riskLevelEnum = pgEnum("risk_level", [

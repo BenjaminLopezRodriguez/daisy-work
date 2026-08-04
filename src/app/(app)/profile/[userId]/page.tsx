@@ -1,10 +1,3 @@
-import { WorkerProfileScreen } from "@/ribs/worker-profile/worker-profile.rib";
+import ProfilePage from "../page";
 
-export default async function UserProfilePage({
-  params,
-}: {
-  params: Promise<{ userId: string }>;
-}) {
-  const { userId } = await params;
-  return <WorkerProfileScreen userId={userId} />;
-}
+export default ProfilePage;

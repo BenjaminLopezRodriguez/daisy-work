@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createRib, useRibLifecycle } from "nextjs-ribs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import {
   AppPage,
   FormField,
-  MobileStickyActions,
   PageHeader,
   StepProgress,
 } from "@/components/daisy";
@@ -24,368 +22,233 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatMoney } from "@/domain";
-import { useAppSession } from "@/lib/daisy/session";
-import {
-  createDraftFromPlan,
-  planWorkFromMessage,
-  type WorkPlan,
-} from "@/server/orchestrator";
-import type { DaisyServices } from "@/server/services";
+import type { WorkPlan } from "@/server/orchestrator/orchestrator.types";
+import { api } from "@/trpc/react";
 
 const STAGES = ["Describe", "Review", "Post"] as const;
 
-export const CreateWorkRib = createRib({
-  name: "CreateWork",
-  interactor: (deps: {
-    services: DaisyServices;
-    requesterId: string;
-    initialMessage?: string;
-  }) => {
-    const [stage, setStage] = useState(0);
-    const [message, setMessage] = useState(deps.initialMessage?.trim() ?? "");
-    const [plan, setPlan] = useState<WorkPlan | null>(null);
-    const [draftId, setDraftId] = useState<string | null>(null);
-    const [busy, setBusy] = useState(false);
-    const [published, setPublished] = useState(false);
-    const [dirty, setDirty] = useState(Boolean(deps.initialMessage?.trim()));
-
-    useRibLifecycle({});
-
-    const prepareDraft = async () => {
-      setBusy(true);
-      const toastId = toast.loading("Daisy is preparing a draft…");
-      try {
-        const result = await planWorkFromMessage({
-          message,
-          userId: deps.requesterId,
-        });
-        if (result.kind === "ask_user") {
-          toast.message("Need a bit more", {
-            id: toastId,
-            description: result.question,
-          });
-          return;
-        }
-        if (result.kind === "unavailable") {
-          toast.error("Daisy unavailable", {
-            id: toastId,
-            description: result.message,
-          });
-          return;
-        }
-        setPlan(result.plan);
-        const created = await createDraftFromPlan(
-          {
-            userId: deps.requesterId,
-            services: {
-              createDraft: (input) => deps.services.workOrders.createDraft(input),
-              publish: async (input) => {
-                await deps.services.workOrders.publish(input);
-              },
-            },
-          },
-          result.plan,
-          deps.requesterId,
-        );
-        setDraftId(created.draftId);
-        setDirty(false);
-        setStage(1);
-        toast.success("Draft ready", {
-          id: toastId,
-          description: result.explanation,
-        });
-      } catch {
-        toast.error("Could not prepare draft", { id: toastId });
-      } finally {
-        setBusy(false);
-      }
-    };
-
-    const publish = async () => {
-      if (!draftId) return;
-      setBusy(true);
-      const toastId = toast.loading("Publishing…");
-      try {
-        await deps.services.workOrders.publish({ workOrderId: draftId });
-        setPublished(true);
-        setDirty(false);
-        setStage(2);
-        toast.success("Posted", {
-          id: toastId,
-          description: "Payments and verification stay mocked in this demo.",
-        });
-      } catch {
-        toast.error("Publish failed", { id: toastId });
-      } finally {
-        setBusy(false);
-      }
-    };
-
-    return {
-      stage,
-      setStage,
-      message,
-      setMessage: (v: string) => {
-        setDirty(true);
-        setMessage(v);
-      },
-      plan,
-      setPlan: (next: WorkPlan) => {
-        setDirty(true);
-        setPlan(next);
-      },
-      draftId,
-      busy,
-      published,
-      dirty,
-      prepareDraft,
-      publish,
-      steps: STAGES,
-    };
-  },
-  router: (state) => ({
-    describe: state.stage === 0,
-    review: state.stage === 1,
-    post: state.stage === 2,
-  }),
-  presenter: (state) => state,
-});
-
 export function CreateWorkView() {
-  const vm = CreateWorkRib.useViewModel();
-  const describe = CreateWorkRib.useRoute("describe");
-  const review = CreateWorkRib.useRoute("review");
-  const post = CreateWorkRib.useRoute("post");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [stage, setStage] = useState(0);
+  const [message, setMessage] = useState(searchParams.get("q")?.trim() ?? "");
+  const [plan, setPlan] = useState<WorkPlan | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(null);
   const [publishOpen, setPublishOpen] = useState(false);
-  const ready = vm.message.trim().length >= 10;
+
+  const planMutation = api.orchestrator.planAndDraft.useMutation();
+  const updateMutation = api.orchestrator.updateDraft.useMutation();
+  const publishMutation = api.work.publish.useMutation();
+  const utils = api.useUtils();
+
+  const ready = message.trim().length >= 10;
+  const busy =
+    planMutation.isPending ||
+    updateMutation.isPending ||
+    publishMutation.isPending;
 
   useEffect(() => {
-    if (!vm.dirty || vm.published) return;
-    const onBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = "";
-    };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [vm.dirty, vm.published]);
+    if (!plan && stage === 0) return;
+  }, [plan, stage]);
+
+  const prepareDraft = async () => {
+    const toastId = toast.loading("Preparing draft…");
+    try {
+      const result = await planMutation.mutateAsync({ message });
+      if (result.kind === "ask_user") {
+        toast.message("Need a bit more", {
+          id: toastId,
+          description: result.question,
+        });
+        return;
+      }
+      if (result.kind === "unavailable") {
+        toast.error("Unavailable", {
+          id: toastId,
+          description: result.message,
+        });
+        return;
+      }
+      setPlan(result.plan);
+      setDraftId(result.draftId);
+      setStage(1);
+      toast.success("Draft ready", {
+        id: toastId,
+        description: result.explanation,
+      });
+      void utils.work.list.invalidate();
+    } catch {
+      toast.error("Could not prepare draft", { id: toastId });
+    }
+  };
+
+  const savePlan = async (next: WorkPlan) => {
+    setPlan(next);
+    if (!draftId) return;
+    await updateMutation.mutateAsync({ draftId, plan: next });
+  };
+
+  const publish = async () => {
+    if (!draftId) return;
+    const toastId = toast.loading("Publishing…");
+    try {
+      if (plan) {
+        await updateMutation.mutateAsync({ draftId, plan });
+      }
+      await publishMutation.mutateAsync({ workOrderId: draftId });
+      setStage(2);
+      setPublishOpen(false);
+      toast.success("Job posted", { id: toastId });
+      void utils.work.list.invalidate();
+    } catch {
+      toast.error("Publish failed", { id: toastId });
+    }
+  };
 
   const updatePlan = <K extends keyof WorkPlan>(key: K, value: WorkPlan[K]) => {
-    if (!vm.plan) return;
-    vm.setPlan({ ...vm.plan, [key]: value });
+    if (!plan) return;
+    void savePlan({ ...plan, [key]: value });
   };
 
   return (
-    <AppPage width="form" className="pb-24 md:pb-0">
+    <AppPage width="form" className="max-w-2xl space-y-8">
       <PageHeader
-        title="Post"
-        description="Say what you need. Daisy structures the rest."
+        title="Post a job"
+        description="Say what you need. Daisy drafts the listing."
       />
 
-      <StepProgress steps={vm.steps} currentIndex={vm.stage} />
+      <StepProgress steps={[...STAGES]} currentIndex={stage} />
 
-      {describe.attached ? (
-        <section className="surface-enter space-y-5">
+      {stage === 0 ? (
+        <section className="space-y-4">
           <FormField
             id="need"
-            label="What needs to be done?"
+            label="What do you need done?"
             required
             helper="One or two sentences is enough."
           >
             <Textarea
               id="need"
-              value={vm.message}
-              onChange={(e) => vm.setMessage(e.target.value)}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
               rows={6}
-              placeholder="Photograph every public entrance at this property…"
-              className="min-h-40 text-base"
+              placeholder="Need a plumber to replace a kitchen faucet this week…"
+              className="min-h-36 text-base"
             />
           </FormField>
-          <div className="hidden md:block">
-            <Button
-              type="button"
-              className="min-h-11 w-full sm:w-auto"
-              disabled={!ready || vm.busy}
-              onClick={() => void vm.prepareDraft()}
-            >
-              {vm.busy ? "Preparing…" : "Create draft"}
-            </Button>
-          </div>
+          <Button
+            type="button"
+            className="min-h-11"
+            disabled={!ready || busy}
+            onClick={() => void prepareDraft()}
+          >
+            {busy ? "Preparing…" : "Continue"}
+          </Button>
         </section>
       ) : null}
 
-      {review.attached && vm.plan ? (
-        <section className="surface-enter space-y-5">
+      {stage === 1 && plan ? (
+        <section className="space-y-4">
           <FormField id="title" label="Title" required>
             <Input
               id="title"
-              value={vm.plan.title}
+              value={plan.title}
               onChange={(e) => updatePlan("title", e.target.value)}
             />
           </FormField>
-          <FormField id="summary" label="Summary">
+          <FormField id="summary" label="Description">
             <Textarea
               id="summary"
-              value={vm.plan.summary}
+              value={plan.summary}
               onChange={(e) => updatePlan("summary", e.target.value)}
               rows={4}
             />
           </FormField>
 
-          <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+          <div className="rounded-xl border border-border bg-card p-4 text-sm">
             <p className="text-xs font-medium text-muted-foreground">
-              Daisy suggests
+              Suggested
             </p>
-            <ul className="mt-2 space-y-2 text-sm">
-              {vm.plan.plainRequirements.map((item) => (
-                <li key={item} className="flex gap-2">
-                  <span className="text-primary" aria-hidden>
-                    •
-                  </span>
-                  <span>{item}</span>
-                </li>
+            <ul className="mt-2 space-y-1.5">
+              {plan.plainRequirements.map((item) => (
+                <li key={item}>• {item}</li>
               ))}
             </ul>
-            <p className="mt-4 text-sm">
-              <span className="text-muted-foreground">Pays </span>
-              <span className="font-semibold tabular-nums">
-                {formatMoney(vm.plan.budgetAmount, vm.plan.currency)}
-              </span>
-              <span className="text-muted-foreground">
-                {" "}
-                · {vm.plan.riskHint}
-              </span>
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Proof: {vm.plan.deliverables.join(", ")}
+            <p className="mt-3 text-muted-foreground">
+              Budget{" "}
+              <span className="font-medium text-foreground tabular-nums">
+                {formatMoney(plan.budgetAmount, plan.currency)}
+              </span>{" "}
+              · {plan.workMode.replaceAll("_", " ")}
             </p>
           </div>
 
-          <div className="hidden gap-2 md:flex">
+          <div className="flex flex-wrap gap-2">
             <Button
               type="button"
               variant="outline"
-              onClick={() => vm.setStage(0)}
+              onClick={() => setStage(0)}
+              disabled={busy}
             >
-              Edit description
+              Back
             </Button>
             <Button
               type="button"
-              className="min-h-11"
-              disabled={vm.busy || vm.published}
+              disabled={busy || !draftId}
               onClick={() => setPublishOpen(true)}
             >
-              Post work
+              Post job
             </Button>
           </div>
         </section>
       ) : null}
 
-      {post.attached ? (
-        <section className="surface-enter space-y-4 rounded-xl border border-border bg-card p-5 shadow-sm">
-          <h2 className="text-lg font-semibold tracking-tight">Posted</h2>
-          <p className="text-sm text-muted-foreground text-pretty">
-            Your Work Order is live in this demo. Open it to track evidence and
-            payment.
+      {stage === 2 && draftId ? (
+        <section className="space-y-4 rounded-xl border border-border bg-card p-5">
+          <h2 className="text-lg font-semibold">Your job is live</h2>
+          <p className="text-sm text-muted-foreground">
+            Workers can find it on Work. You can open it anytime.
           </p>
-          {vm.draftId ? (
-            <Button asChild className="min-h-11">
-              <a href={`/work/${vm.draftId}`}>Open Work Order</a>
-            </Button>
-          ) : null}
+          <Button
+            type="button"
+            className="min-h-11"
+            onClick={() => router.push(`/work/${draftId}`)}
+          >
+            Open job
+          </Button>
         </section>
       ) : null}
 
       <Dialog open={publishOpen} onOpenChange={setPublishOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Post this work?</DialogTitle>
+            <DialogTitle>Post this job?</DialogTitle>
             <DialogDescription>
-              {vm.plan?.title ?? "Draft"} will go live. You can still review
-              evidence before payment releases.
+              It will show up in Work for people to find.
             </DialogDescription>
           </DialogHeader>
-          {vm.plan ? (
-            <p className="text-sm tabular-nums">
-              {formatMoney(vm.plan.budgetAmount, vm.plan.currency)} ·{" "}
-              {vm.plan.riskHint}
-            </p>
-          ) : null}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPublishOpen(false)}>
-              Keep editing
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPublishOpen(false)}
+            >
+              Cancel
             </Button>
             <Button
-              disabled={vm.busy}
-              onClick={() => {
-                void vm.publish().then(() => setPublishOpen(false));
-              }}
+              type="button"
+              disabled={busy}
+              onClick={() => void publish()}
             >
-              {vm.busy ? "Posting…" : "Confirm"}
+              {busy ? "Posting…" : "Post"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <MobileStickyActions className="md:hidden">
-        {vm.stage === 0 ? (
-          <Button
-            type="button"
-            className="min-h-11 flex-1"
-            disabled={!ready || vm.busy}
-            onClick={() => void vm.prepareDraft()}
-          >
-            {vm.busy ? "Preparing…" : "Create draft"}
-          </Button>
-        ) : null}
-        {vm.stage === 1 ? (
-          <>
-            <Button
-              type="button"
-              variant="outline"
-              className="min-h-11"
-              onClick={() => vm.setStage(0)}
-            >
-              Back
-            </Button>
-            <Button
-              type="button"
-              className="min-h-11 flex-1"
-              disabled={vm.busy || vm.published}
-              onClick={() => setPublishOpen(true)}
-            >
-              Post work
-            </Button>
-          </>
-        ) : null}
-        {vm.stage === 2 && vm.draftId ? (
-          <Button
-            type="button"
-            className="min-h-11 flex-1"
-            onClick={() => router.push(`/work/${vm.draftId}`)}
-          >
-            Open Work Order
-          </Button>
-        ) : null}
-      </MobileStickyActions>
     </AppPage>
   );
 }
 
 export function CreateWorkScreen() {
-  const session = useAppSession();
-  const searchParams = useSearchParams();
-  const initialMessage = searchParams.get("q") ?? undefined;
-
-  return (
-    <CreateWorkRib.Provider
-      deps={{
-        services: session.services,
-        requesterId: session.currentUser.id,
-        initialMessage,
-      }}
-    >
-      <CreateWorkView />
-    </CreateWorkRib.Provider>
-  );
+  return <CreateWorkView />;
 }

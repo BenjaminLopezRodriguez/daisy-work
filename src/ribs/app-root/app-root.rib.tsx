@@ -5,11 +5,9 @@ import { createRib, useRibLifecycle } from "nextjs-ribs";
 import { DaisyAppShell } from "@/components/daisy/app-shell/daisy-app-shell";
 import { useAppSession } from "@/lib/daisy/session";
 import type { User } from "@/domain";
-import type { DaisyServices } from "@/server/services";
 
 export type AppRootDeps = {
   currentUser: User;
-  services: DaisyServices;
 };
 
 export const AppRootRib = createRib({
@@ -18,7 +16,6 @@ export const AppRootRib = createRib({
     useRibLifecycle({});
     return {
       currentUser: deps.currentUser,
-      services: deps.services,
     };
   },
   presenter: (state) => ({
@@ -39,9 +36,7 @@ export function AppRootView({ children }: { children: React.ReactNode }) {
 export function AppRootProvider({ children }: { children: React.ReactNode }) {
   const session = useAppSession();
   return (
-    <AppRootRib.Provider
-      deps={{ currentUser: session.currentUser, services: session.services }}
-    >
+    <AppRootRib.Provider deps={{ currentUser: session.currentUser }}>
       <AppRootView>{children}</AppRootView>
     </AppRootRib.Provider>
   );

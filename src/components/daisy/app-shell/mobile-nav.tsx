@@ -26,13 +26,12 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { href: "/home", label: "Home", icon: Home },
   { href: "/work", label: "Work", icon: Briefcase },
-  { href: "/create", label: "Post", icon: Plus, center: true },
+  { href: "/create", label: "Post", icon: Plus },
   { href: "/inbox", label: "Inbox", icon: Inbox },
   { href: "/account", label: "Account", icon: UserRound },
 ] as const;
 
 const ACCOUNT_LINKS = [
-  { href: "/account", label: "Account home" },
   { href: "/profile", label: "Profile" },
   { href: "/payments", label: "Payments" },
   { href: "/organization", label: "Organization" },
@@ -75,7 +74,10 @@ export function MobileHeader({
             <Menu className="size-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="flex w-[min(20rem,88vw)] flex-col gap-0 p-0">
+        <SheetContent
+          side="left"
+          className="flex w-[min(20rem,88vw)] flex-col gap-0 p-0"
+        >
           <SheetHeader className="border-b border-border px-4 py-4 text-left">
             <SheetTitle className="text-left">
               Daisy<span className="text-primary">.work</span>
@@ -100,7 +102,7 @@ export function MobileHeader({
                         )}
                       >
                         <Icon className="size-5" aria-hidden />
-                        {item.label === "Post" ? "Post work" : item.label}
+                        {item.label}
                       </Link>
                     </SheetClose>
                   </li>
@@ -147,28 +149,15 @@ export function MobileBottomNav() {
       aria-label="Primary"
       className="fixed inset-x-0 bottom-0 z-[var(--app-z-mobile-nav)] border-t border-border bg-card/95 backdrop-blur md:hidden"
       style={{
-        height: "calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px))",
+        height:
+          "calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px))",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
-      <ul className="grid h-[var(--mobile-nav-height)] grid-cols-5 items-end px-1 pt-1">
+      <ul className="grid h-[var(--mobile-nav-height)] grid-cols-5">
         {TABS.map((tab) => {
           const active = isActive(pathname, tab.href);
           const Icon = tab.icon;
-          if ("center" in tab && tab.center) {
-            return (
-              <li key={tab.href} className="flex justify-center pb-2">
-                <Link
-                  href={tab.href}
-                  aria-current={active ? "page" : undefined}
-                  aria-label="Post work"
-                  className="flex size-12 -translate-y-2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-[transform,box-shadow,background-color] duration-150 ease-out hover:bg-primary/90 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <Icon className="size-5" strokeWidth={2} />
-                </Link>
-              </li>
-            );
-          }
           return (
             <li key={tab.href}>
               <Link
@@ -179,7 +168,7 @@ export function MobileBottomNav() {
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               >
-                <Icon className="size-5" strokeWidth={2} aria-hidden />
+                <Icon className="size-5" aria-hidden />
                 {tab.label}
               </Link>
             </li>

@@ -111,8 +111,3 @@ export class MockOrchestratorModel implements OrchestratorModel {
     };
   }
 }
-
-export function createOrchestratorModel(): OrchestratorModel {
-  // Live DeepSeek adapter can replace this when DEEPSEEK_API_KEY is present.
-  return new MockOrchestratorModel();
-}
