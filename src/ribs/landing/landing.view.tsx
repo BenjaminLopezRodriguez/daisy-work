@@ -3,28 +3,60 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { MapPin, Search } from "lucide-react";
 
-import { WorkStatusBadge } from "@/components/daisy";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { formatMoney } from "@/domain";
+import { BudgetType, formatMoney } from "@/domain";
 import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
+
+/** How the job's price reads on a card. Amounts are integer cents. */
+function priceLabel(job: {
+  budgetType: BudgetType;
+  budgetAmount: number;
+  currency: string;
+}) {
+  const money = formatMoney(job.budgetAmount, job.currency);
+  if (job.budgetType === BudgetType.Hourly) return `${money}/hr`;
+  if (job.budgetType === BudgetType.Milestone) return `${money} total`;
+  return `${money} fixed`;
+}
 
 export function LandingView() {
   const router = useRouter();
   const [prompt, setPrompt] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [category, setCategory] = useState<string | null>(null);
 
-  const { data: jobs = [], isLoading } = api.work.browse.useQuery(
+  const { data: allJobs = [], isLoading } = api.work.browse.useQuery(
     searchQuery ? { q: searchQuery } : undefined,
   );
 
+  // ponytail: categories come from the jobs already on screen — no extra endpoint.
+  const categories = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const job of allJobs) {
+      counts.set(job.category, (counts.get(job.category) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 8);
+  }, [allJobs]);
+
+  const jobs = useMemo(
+    () => (category ? allJobs.filter((j) => j.category === category) : allJobs),
+    [allJobs, category],
+  );
+
   const filteredHint = useMemo(() => {
-    if (!searchQuery.trim()) return null;
-    return `${jobs.length} result${jobs.length === 1 ? "" : "s"} for “${searchQuery.trim()}”`;
+    if (searchQuery.trim()) {
+      return `${jobs.length} result${jobs.length === 1 ? "" : "s"} for “${searchQuery.trim()}”`;
+    }
+    if (jobs.length === 0) return null;
+    return `${jobs.length} open ${jobs.length === 1 ? "job" : "jobs"}`;
   }, [jobs.length, searchQuery]);
 
   const requestJob = () => {
@@ -35,6 +67,7 @@ export function LandingView() {
 
   const searchJobs = () => {
     setSearchQuery(prompt.trim());
+    setCategory(null);
   };
 
   return (
@@ -125,12 +158,52 @@ export function LandingView() {
                 onClick={() => {
                   setSearchQuery("");
                   setPrompt("");
+                  setCategory(null);
                 }}
               >
                 Clear search
               </Button>
             ) : null}
           </div>
+
+          {categories.length > 1 ? (
+            <div
+              className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
+              role="group"
+              aria-label="Filter jobs by category"
+            >
+              <button
+                type="button"
+                onClick={() => setCategory(null)}
+                aria-pressed={category === null}
+                className={cn(
+                  "min-h-9 shrink-0 rounded-full border px-3 text-xs font-medium capitalize transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  category === null
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border text-muted-foreground hover:bg-muted",
+                )}
+              >
+                All
+              </button>
+              {categories.map(([name, count]) => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => setCategory(name)}
+                  aria-pressed={category === name}
+                  className={cn(
+                    "min-h-9 shrink-0 rounded-full border px-3 text-xs font-medium capitalize transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                    category === name
+                      ? "border-foreground bg-foreground text-background"
+                      : "border-border text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  {name}{" "}
+                  <span className="tabular-nums opacity-60">{count}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
 
           {isLoading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -160,29 +233,75 @@ export function LandingView() {
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <WorkStatusBadge status={wo.status} />
-                      <span className="text-xs font-medium tabular-nums text-muted-foreground">
-                        {formatMoney(wo.budgetAmount, wo.currency)}
+                      <span className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                        {wo.category}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(wo.createdAt, { addSuffix: true })}
                       </span>
                     </div>
                     <div className="min-w-0 flex-1 space-y-1">
                       <h3 className="line-clamp-2 text-sm font-semibold tracking-tight">
                         {wo.title}
                       </h3>
-                      <p className="line-clamp-2 text-xs text-muted-foreground">
+                      <p className="line-clamp-3 text-xs text-muted-foreground">
                         {wo.description}
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground capitalize">
-                      <span>{wo.category}</span>
-                      <span>·</span>
-                      <span>{wo.workMode.replaceAll("_", " ")}</span>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+                      <span className="font-semibold tabular-nums text-foreground">
+                        {priceLabel(wo)}
+                      </span>
+                      <span aria-hidden>·</span>
+                      <span className="capitalize">
+                        {wo.workMode.replaceAll("_", " ")}
+                      </span>
+                      {wo.location?.label ? (
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="size-3" aria-hidden />
+                          {wo.location.label}
+                        </span>
+                      ) : null}
                     </div>
                   </Link>
                 </li>
               ))}
             </ul>
           )}
+        </section>
+        <section className="space-y-4 border-t border-border pt-10">
+          <h2 className="text-lg font-semibold tracking-tight">How it works</h2>
+          <ol className="grid gap-4 sm:grid-cols-3">
+            {[
+              {
+                title: "Describe it",
+                body: "Say what you need in plain words. No forms to fill in.",
+              },
+              {
+                title: "Daisy writes the posting",
+                body: "You get a draft with scope, budget and requirements. Edit anything.",
+              },
+              {
+                title: "Publish and hire",
+                body: "Your job goes live here. People apply, you pick who does it.",
+              },
+            ].map((step, i) => (
+              <li
+                key={step.title}
+                className="rounded-xl border border-border bg-card p-4"
+              >
+                <span className="text-xs font-semibold tabular-nums text-muted-foreground">
+                  {i + 1}
+                </span>
+                <h3 className="mt-1 text-sm font-semibold tracking-tight">
+                  {step.title}
+                </h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {step.body}
+                </p>
+              </li>
+            ))}
+          </ol>
         </section>
       </main>
 
