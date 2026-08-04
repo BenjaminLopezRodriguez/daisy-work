@@ -1,4 +1,2 @@
 allowBuilds:
   nextjs-ribs: true
-  "nextjs-ribs@https://codeload.github.com/BenjaminLopezRodriguez/nextjs-ribs/tar.gz/994aff8ce0c3e7ddb763010d2cf12460b76ce151": true
-  "nextjs-ribs@git+https://github.com/BenjaminLopezRodriguez/nextjs-ribs.git": true
