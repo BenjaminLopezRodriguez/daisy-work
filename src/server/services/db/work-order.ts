@@ -11,7 +11,7 @@ import {
   type WorkOrderLocation,
 } from "@/domain";
 import { db } from "@/server/db";
-import { users, workOrders } from "@/server/db/schema";
+import { workOrders, type users } from "@/server/db/schema";
 import type { CreateDraftInput, WorkOrderService } from "@/server/services/types";
 import {
   assignInputSchema,
@@ -95,7 +95,7 @@ function mapWorkOrder(row: typeof workOrders.$inferSelect): WorkOrder {
   };
 }
 
-function mapUser(row: typeof users.$inferSelect) {
+export function mapUser(row: typeof users.$inferSelect) {
   const identityStatus =
     row.identityStatus === "pending" ||
     row.identityStatus === "verified" ||
@@ -113,32 +113,6 @@ function mapUser(row: typeof users.$inferSelect) {
     trustLevel: row.trustLevel,
     createdAt: row.createdAt,
   };
-}
-
-/** Demo identity until real auth lands. Stable email → upserted user. */
-export const DEMO_USER_EMAIL = "maya@daisy.work";
-
-export async function ensureDemoUser() {
-  const [existing] = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, DEMO_USER_EMAIL))
-    .limit(1);
-  if (existing) return mapUser(existing);
-
-  const [created] = await db
-    .insert(users)
-    .values({
-      name: "Maya Chen",
-      email: DEMO_USER_EMAIL,
-      accountType: "individual",
-      identityStatus: "verified",
-      trustLevel: 1,
-    })
-    .returning();
-
-  if (!created) throw new Error("Failed to create demo user");
-  return mapUser(created);
 }
 
 export function createDbWorkOrderService(): WorkOrderService {

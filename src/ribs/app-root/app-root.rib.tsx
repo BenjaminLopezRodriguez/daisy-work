@@ -20,14 +20,13 @@ export const AppRootRib = createRib({
   },
   presenter: (state) => ({
     userName: state.currentUser.name,
-    userId: state.currentUser.id,
   }),
 });
 
 export function AppRootView({ children }: { children: React.ReactNode }) {
   const vm = AppRootRib.useViewModel();
   return (
-    <DaisyAppShell userName={vm.userName} userId={vm.userId}>
+    <DaisyAppShell userName={vm.userName}>
       {children}
     </DaisyAppShell>
   );

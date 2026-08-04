@@ -57,10 +57,11 @@ export function LandingView() {
         <section className="mx-auto w-full max-w-2xl space-y-5 text-center">
           <div className="space-y-2">
             <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              What do you need done?
+              Describe a job. Daisy writes the posting.
             </h1>
             <p className="text-sm text-muted-foreground text-pretty sm:text-base">
-              Request a new job, or search what’s already posted.
+              Say what you need in plain words. You review it, publish it, and
+              people apply. Or search jobs already posted.
             </p>
           </div>
 
@@ -100,7 +101,7 @@ export function LandingView() {
                 className="min-h-10"
                 disabled={prompt.trim().length === 0}
               >
-                Request
+                Write the posting
               </Button>
             </div>
           </form>
@@ -113,7 +114,7 @@ export function LandingView() {
                 Available jobs
               </h2>
               <p className="text-sm text-muted-foreground">
-                {filteredHint ?? "Published jobs open for people to take on."}
+                {filteredHint ?? "Jobs that are posted and open to apply to."}
               </p>
             </div>
             {searchQuery ? (
@@ -139,9 +140,13 @@ export function LandingView() {
             </div>
           ) : jobs.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border px-5 py-12 text-center">
-              <p className="text-sm font-medium">No jobs posted yet</p>
+              <p className="text-sm font-medium">
+                {searchQuery ? "No jobs match that search" : "No jobs yet"}
+              </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Be the first — request a job above.
+                {searchQuery
+                  ? "Try different words, or describe the job you need above."
+                  : "Nothing has been posted yet. Describe a job above to post the first one."}
               </p>
             </div>
           ) : (

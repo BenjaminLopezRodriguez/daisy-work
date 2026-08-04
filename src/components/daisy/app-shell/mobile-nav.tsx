@@ -2,14 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Briefcase,
-  Home,
-  Inbox,
-  Menu,
-  Plus,
-  UserRound,
-} from "lucide-react";
+import { Briefcase, Home, Menu, Plus, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,35 +13,17 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "/home", label: "Home", icon: Home },
   { href: "/work", label: "Work", icon: Briefcase },
   { href: "/create", label: "Post", icon: Plus },
-  { href: "/inbox", label: "Inbox", icon: Inbox },
   { href: "/account", label: "Account", icon: UserRound },
-] as const;
-
-const ACCOUNT_LINKS = [
-  { href: "/profile", label: "Profile" },
-  { href: "/payments", label: "Payments" },
-  { href: "/organization", label: "Organization" },
-  { href: "/saved", label: "Saved" },
 ] as const;
 
 function isActive(pathname: string, href: string) {
   if (href === "/home") return pathname === "/home";
-  if (href === "/account") {
-    return (
-      pathname === "/account" ||
-      pathname.startsWith("/profile") ||
-      pathname.startsWith("/payments") ||
-      pathname.startsWith("/saved") ||
-      pathname.startsWith("/organization")
-    );
-  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -109,24 +84,6 @@ export function MobileHeader({
                 );
               })}
             </ul>
-            <Separator className="my-3" />
-            <p className="px-3 pb-1 text-xs font-medium text-muted-foreground">
-              Account
-            </p>
-            <ul className="space-y-0.5">
-              {ACCOUNT_LINKS.map((item) => (
-                <li key={item.href}>
-                  <SheetClose asChild>
-                    <Link
-                      href={item.href}
-                      className="flex min-h-12 items-center rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
-                    >
-                      {item.label}
-                    </Link>
-                  </SheetClose>
-                </li>
-              ))}
-            </ul>
           </nav>
         </SheetContent>
       </Sheet>
@@ -154,7 +111,7 @@ export function MobileBottomNav() {
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
-      <ul className="grid h-[var(--mobile-nav-height)] grid-cols-5">
+      <ul className="grid h-[var(--mobile-nav-height)] grid-cols-4">
         {TABS.map((tab) => {
           const active = isActive(pathname, tab.href);
           const Icon = tab.icon;

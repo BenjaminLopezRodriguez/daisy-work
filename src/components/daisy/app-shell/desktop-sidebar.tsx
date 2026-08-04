@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Home,
-  Briefcase,
-  Plus,
-  Inbox,
-  UserRound,
-} from "lucide-react";
+import { Home, Briefcase, Plus, UserRound } from "lucide-react";
 
 import {
   Sidebar,
@@ -35,31 +29,15 @@ const MAIN_NAV = [
   { href: "/home", label: "Home", icon: Home },
   { href: "/work", label: "Work", icon: Briefcase },
   { href: "/create", label: "Post", icon: Plus, emphasize: true },
-  { href: "/inbox", label: "Inbox", icon: Inbox },
   { href: "/account", label: "Account", icon: UserRound },
 ] as const;
 
 function isActive(pathname: string, href: string) {
   if (href === "/home") return pathname === "/home";
-  if (href === "/account") {
-    return (
-      pathname === "/account" ||
-      pathname.startsWith("/profile") ||
-      pathname.startsWith("/payments") ||
-      pathname.startsWith("/saved") ||
-      pathname.startsWith("/organization")
-    );
-  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function DesktopSidebar({
-  userName,
-  userId,
-}: {
-  userName: string;
-  userId: string;
-}) {
+export function DesktopSidebar({ userName }: { userName: string }) {
   const pathname = usePathname();
   const initials = userName
     .split(" ")
@@ -121,18 +99,6 @@ export function DesktopSidebar({
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/account">Account</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href={`/profile/${userId}`}>Profile</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/payments">Payments</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/organization">Organization</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/saved">Saved</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem disabled>Sign out (demo)</DropdownMenuItem>

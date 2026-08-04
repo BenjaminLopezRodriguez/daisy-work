@@ -12,9 +12,12 @@ export const users = createTable(
   "user",
   (d) => ({
     id: d.uuid().primaryKey().defaultRandom(),
-    name: d.varchar({ length: 256 }).notNull(),
+    name: d.varchar({ length: 256 }).notNull().default(""),
     email: d.varchar({ length: 320 }).notNull().unique(),
     avatar: d.text(),
+    /** Auth.js adapter columns. */
+    emailVerified: d.timestamp({ withTimezone: true }),
+    image: d.text(),
     accountType: accountTypeEnum("account_type").notNull().default("individual"),
     identityStatus: identityStatusEnum("identity_status")
       .notNull()

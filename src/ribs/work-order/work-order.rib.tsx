@@ -70,6 +70,113 @@ export function WorkOrderScreen({ workOrderId }: { workOrderId: string }) {
           {wo.description}
         </p>
       </section>
+
+      <ApplySection workOrderId={wo.id} requesterId={wo.requesterId} />
     </AppPage>
+  );
+}
+
+/**
+ * Poster sees applicants. Signed-in worker sees one Apply button.
+ * Signed-out visitor sees a sign-in prompt. tRPC only — no server imports.
+ */
+function ApplySection({
+  workOrderId,
+  requesterId,
+}: {
+  workOrderId: string;
+  requesterId: string;
+}) {
+  const mine = api.application.mine.useQuery(undefined, { retry: false });
+
+  if (mine.isLoading) return <Skeleton className="h-16 rounded-xl" />;
+
+  // Unauthenticated: `mine` is a protected procedure and errors out.
+  if (mine.isError || !mine.data) {
+    return (
+      <EmptyState
+        title="Sign in to apply"
+        description="You need an account to apply for this job."
+        action={
+          <Button asChild>
+            <Link href="/api/auth/signin">Sign in</Link>
+          </Button>
+        }
+      />
+    );
+  }
+
+  if (mine.data.userId === requesterId) {
+    return <ApplicantList workOrderId={workOrderId} />;
+  }
+
+  const applied = mine.data.applications.some(
+    (a) => a.workOrderId === workOrderId,
+  );
+
+  return <ApplyButton workOrderId={workOrderId} applied={applied} />;
+}
+
+function ApplyButton({
+  workOrderId,
+  applied,
+}: {
+  workOrderId: string;
+  applied: boolean;
+}) {
+  const utils = api.useUtils();
+  const apply = api.application.submit.useMutation({
+    onSuccess: () => utils.application.mine.invalidate(),
+  });
+  const done = applied || apply.isSuccess;
+
+  return (
+    <div className="space-y-2">
+      <Button
+        className="w-full"
+        disabled={done || apply.isPending}
+        onClick={() => apply.mutate({ workOrderId })}
+      >
+        {done ? "Applied" : apply.isPending ? "Applying…" : "Apply"}
+      </Button>
+      {apply.error ? (
+        <p className="text-sm text-destructive">{apply.error.message}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function ApplicantList({ workOrderId }: { workOrderId: string }) {
+  const { data, isLoading } = api.application.listForJob.useQuery(
+    { workOrderId },
+    { retry: false },
+  );
+
+  if (isLoading) return <Skeleton className="h-16 rounded-xl" />;
+  if (!data?.length) {
+    return (
+      <EmptyState
+        title="No applicants yet"
+        description="You'll see people here as they apply to your job."
+      />
+    );
+  }
+
+  return (
+    <section className="rounded-xl border border-border bg-card p-4 text-sm">
+      <h2 className="font-medium">
+        Applicants <span className="text-muted-foreground">({data.length})</span>
+      </h2>
+      <ul className="mt-3 space-y-3">
+        {data.map((a) => (
+          <li key={a.id} className="space-y-1">
+            <p className="font-medium">{a.applicantName}</p>
+            {a.message ? (
+              <p className="text-muted-foreground">{a.message}</p>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

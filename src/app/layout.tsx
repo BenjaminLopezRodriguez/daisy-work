@@ -6,14 +6,31 @@ import { Geist } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TRPCReactProvider } from "@/trpc/react";
 
+const title = "Daisy.work — Describe a job, get it posted";
+const description =
+  "Describe the job you need done in plain words. Daisy writes the posting, you publish it, and people apply.";
+const url = "https://daisy-work.vercel.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(url),
   title: {
-    default: "Daisy.work",
+    default: title,
     template: "%s · Daisy.work",
   },
-  description:
-    "Work coordination infrastructure for humans and agents — assign, verify, and pay under rules that match the job.",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  description,
+  openGraph: {
+    type: "website",
+    siteName: "Daisy.work",
+    title,
+    description,
+    url,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
+  robots: { index: true, follow: true },
 };
 
 const geist = Geist({
