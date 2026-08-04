@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq, or } from "drizzle-orm";
+import { desc, eq, or } from "drizzle-orm";
 
 import {
   AssigneeType,
@@ -247,6 +247,15 @@ export function createDbWorkOrderService(): WorkOrderService {
             eq(workOrders.assigneeId, userId),
           ),
         );
+      return rows.map(mapWorkOrder);
+    },
+
+    async listPublished() {
+      const rows = await db
+        .select()
+        .from(workOrders)
+        .where(eq(workOrders.status, "published"))
+        .orderBy(desc(workOrders.createdAt));
       return rows.map(mapWorkOrder);
     },
   };

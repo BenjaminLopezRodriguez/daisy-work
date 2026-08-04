@@ -106,5 +106,9 @@ export function createMockWorkOrderService(): WorkOrderService {
         (w) => w.requesterId === userId || w.assigneeId === userId,
       );
     },
+
+    async listPublished() {
+      return store.workOrders.filter((w) => w.status === WorkOrderStatus.Published);
+    },
   };
 }

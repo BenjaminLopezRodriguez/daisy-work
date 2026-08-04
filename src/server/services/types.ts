@@ -134,6 +134,7 @@ export type WorkOrderService = {
   approve: (input: { workOrderId: string }) => Promise<WorkOrder>;
   getById: (workOrderId: string) => Promise<WorkOrder | null>;
   listForUser: (userId: string) => Promise<WorkOrder[]>;
+  listPublished: () => Promise<WorkOrder[]>;
 };
 
 export type DaisyServices = {

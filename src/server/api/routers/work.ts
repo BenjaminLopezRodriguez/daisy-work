@@ -19,6 +19,20 @@ export const workRouter = createTRPCRouter({
     return createDbWorkOrderService().listForUser(user.id);
   }),
 
+  browse: publicProcedure
+    .input(z.object({ q: z.string().optional() }).optional())
+    .query(async ({ input }) => {
+      const jobs = await createDbWorkOrderService().listPublished();
+      const q = input?.q?.trim().toLowerCase();
+      if (!q) return jobs;
+      return jobs.filter(
+        (wo) =>
+          wo.title.toLowerCase().includes(q) ||
+          wo.description.toLowerCase().includes(q) ||
+          wo.category.toLowerCase().includes(q),
+      );
+    }),
+
   byId: publicProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input }) => {
