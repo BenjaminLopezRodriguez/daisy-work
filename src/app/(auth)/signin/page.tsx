@@ -5,7 +5,7 @@ import { auth, signIn } from "@/server/auth";
 
 export default async function SignInPage() {
   const session = await auth();
-  if (session?.user) redirect("/home");
+  if (session?.user) redirect("/welcome");
 
   return (
     <main className="flex min-h-dvh items-center justify-center p-6">
@@ -19,7 +19,8 @@ export default async function SignInPage() {
         <form
           action={async () => {
             "use server";
-            await signIn("google", { redirectTo: "/home" });
+            // /welcome asks the one onboarding question, then routes onward.
+            await signIn("google", { redirectTo: "/welcome" });
           }}
         >
           <Button type="submit" className="w-full">

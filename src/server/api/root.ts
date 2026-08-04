@@ -1,5 +1,6 @@
 import { applicationRouter } from "@/server/api/routers/application";
 import { postRouter } from "@/server/api/routers/post";
+import { providerRouter } from "@/server/api/routers/provider";
 import {
   meRouter,
   orchestratorRouter,
@@ -13,6 +14,7 @@ export const appRouter = createTRPCRouter({
   work: workRouter,
   orchestrator: orchestratorRouter,
   application: applicationRouter,
+  provider: providerRouter,
 });
 
 // export type definition of API

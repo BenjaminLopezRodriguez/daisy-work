@@ -19,6 +19,11 @@ export const users = createTable(
     emailVerified: d.timestamp({ withTimezone: true }),
     image: d.text(),
     accountType: accountTypeEnum("account_type").notNull().default("individual"),
+    /**
+     * What the user said they came to do, asked once after first sign-in.
+     * null = never asked. "hire" | "provide".
+     */
+    onboardingChoice: d.varchar({ length: 16 }),
     identityStatus: identityStatusEnum("identity_status")
       .notNull()
       .default("unverified"),
