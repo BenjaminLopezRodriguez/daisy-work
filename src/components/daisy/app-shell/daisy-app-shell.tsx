@@ -6,26 +6,10 @@ import { usePathname } from "next/navigation";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
+import { titleForPath } from "@/lib/daisy/nav";
+
 import { DesktopSidebar } from "./desktop-sidebar";
 import { MobileBottomNav, MobileHeader } from "./mobile-nav";
-
-const TITLES: Record<string, string> = {
-  "/home": "Home",
-  "/work": "Requests",
-  "/marketplace": "Marketplace",
-  "/create": "What do you need?",
-  "/services": "Services",
-  "/account": "Account",
-  "/account/ads": "Advertise",
-};
-
-function pageTitle(pathname: string) {
-  if (TITLES[pathname]) return TITLES[pathname];
-  if (pathname.startsWith("/work/")) return "Request";
-  if (pathname.startsWith("/services/")) return "Service";
-  if (pathname.startsWith("/providers/")) return "Provider";
-  return "Daisy.work";
-}
 
 export function DaisyAppShell({
   userName,
@@ -39,10 +23,17 @@ export function DaisyAppShell({
   children: ReactNode;
 }) {
   const pathname = usePathname();
-  const title = pageTitle(pathname);
+  const title = titleForPath(pathname);
 
   return (
     <TooltipProvider delayDuration={0}>
+      {/* First focusable element on every page. (§6.4) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-md focus:bg-nav-surface focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-nav-ink focus:shadow-nav-float focus:ring-2 focus:ring-nav-focus focus:outline-none"
+      >
+        Skip to content
+      </a>
       <SidebarProvider defaultOpen className="app-shell">
         <DesktopSidebar
           userName={userName}
@@ -53,11 +44,16 @@ export function DaisyAppShell({
           <MobileHeader
             title={title}
             userName={userName}
+            userAvatar={userAvatar}
             onboardingChoice={onboardingChoice}
           />
-          <div className="app-content app-content-pad flex-1 px-4 pt-6 sm:px-6 md:pt-10 lg:px-8">
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className="app-content app-content-pad flex-1 px-4 pt-6 focus:outline-none sm:px-6 md:pt-10 lg:px-8"
+          >
             {children}
-          </div>
+          </main>
         </SidebarInset>
         <MobileBottomNav onboardingChoice={onboardingChoice} />
       </SidebarProvider>

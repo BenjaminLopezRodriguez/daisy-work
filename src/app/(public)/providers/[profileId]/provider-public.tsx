@@ -6,10 +6,20 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { AppPage, EmptyState, PageHeader } from "@/components/daisy";
+import { Breadcrumbs } from "@/components/daisy/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@/domain";
 import { api } from "@/trpc/react";
+
+/**
+ * §3.3: `Browse › Providers › {name}`. No `/providers` index exists yet
+ * (design system §8), so the Providers crumb is plain text, not a dead link.
+ */
+const PROVIDER_TRAIL = [
+  { label: "Browse", href: "/marketplace" },
+  { label: "Providers" },
+];
 
 /** Legacy provider page — prefer service listings; keep for profile deep links. */
 export default function ProviderPublicPage({
@@ -35,6 +45,7 @@ export default function ProviderPublicPage({
   if (isLoading) {
     return (
       <AppPage width="form" className="max-w-2xl space-y-4">
+        <Breadcrumbs trail={PROVIDER_TRAIL} page={null} />
         <Skeleton className="aspect-video w-full rounded-xl" />
       </AppPage>
     );
@@ -58,6 +69,8 @@ export default function ProviderPublicPage({
 
   return (
     <AppPage width="form" className="max-w-2xl space-y-6">
+      <Breadcrumbs trail={PROVIDER_TRAIL} page={data.name} />
+
       {data.coverImageUrl ? (
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-muted">
           <Image

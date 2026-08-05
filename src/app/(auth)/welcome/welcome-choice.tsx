@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Briefcase, Wrench } from "lucide-react";
 
 import { api } from "@/trpc/react";
+import { postAuthPath } from "@/lib/daisy/role";
 import { cn } from "@/lib/utils";
 
 const OPTIONS = [
@@ -26,11 +27,7 @@ export function WelcomeChoice() {
   const { data: status } = api.provider.status.useQuery();
   const setIntent = api.provider.setIntent.useMutation({
     onSuccess: ({ choice }) => {
-      if (choice === "provide") {
-        router.push(status?.profile ? "/work" : "/onboarding/provider");
-      } else {
-        router.push("/home");
-      }
+      router.push(postAuthPath(choice, Boolean(status?.profile)));
       router.refresh();
     },
   });

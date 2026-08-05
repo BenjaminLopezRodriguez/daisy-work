@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 
 import { AppPage, PageHeader, WorkStatusBadge } from "@/components/daisy";
 import { ImageCropUpload } from "@/components/daisy/uploads/image-crop-upload";
+import { RoleSwitchRows } from "@/components/daisy/app-shell/role-switch";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@/domain";
@@ -53,9 +54,6 @@ export default function AccountPage() {
       <div className="rounded-xl border border-border bg-card p-4 text-sm">
         <p className="font-medium">{currentUser.name}</p>
         <p className="mt-1 text-muted-foreground">{currentUser.email}</p>
-        <p className="mt-2 text-xs text-muted-foreground capitalize">
-          Mode: {worker ? "Worker" : "Customer"}
-        </p>
         <div className="mt-3 flex flex-wrap gap-2">
         {worker ? (
           <Button asChild size="sm" variant="outline">
@@ -67,11 +65,14 @@ export default function AccountPage() {
             <Link href="/services">Manage services</Link>
           </Button>
         ) : null}
-          <Button asChild size="sm" variant="ghost">
-            <Link href="/welcome?switch=1">Switch mode</Link>
-          </Button>
         </div>
       </div>
+
+      {/* Role switch — visible and reversible on mobile too. (§5.6) */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-medium">Viewing as</h2>
+        <RoleSwitchRows onboardingChoice={currentUser.onboardingChoice ?? null} />
+      </section>
 
       {/* Reach */}
       <section className="space-y-3">

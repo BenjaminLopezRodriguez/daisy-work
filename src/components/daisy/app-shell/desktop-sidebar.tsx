@@ -18,12 +18,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { isNavActive, navForRole } from "@/lib/daisy/nav";
+import { MODE_LABEL } from "@/lib/daisy/role";
+
+import { AccountMenuBody } from "./role-switch";
 
 export function DesktopSidebar({
   userName,
@@ -81,7 +81,7 @@ export function DesktopSidebar({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex size-11 w-full items-center justify-center gap-2 rounded-md text-left text-sm outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-11 md:justify-start md:px-2 group-data-[collapsible=icon]:md:justify-center group-data-[collapsible=icon]:md:px-0"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-md text-left text-sm outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-11 md:justify-start md:px-2 group-data-[collapsible=icon]:md:justify-center group-data-[collapsible=icon]:md:px-0"
             >
               <Avatar className="size-8 shrink-0">
                 {userAvatar ? (
@@ -89,24 +89,20 @@ export function DesktopSidebar({
                 ) : null}
                 <AvatarFallback className="text-xs">{initials}</AvatarFallback>
               </Avatar>
-              <span className="truncate group-data-[collapsible=icon]:hidden">
-                {userName}
+              <span className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+                <span className="block truncate">{userName}</span>
+                {/* The mode must be legible without opening a menu. (§5.6) */}
+                <span className="text-nav-ink-muted block truncate text-xs">
+                  {onboardingChoice ? MODE_LABEL[onboardingChoice] : "Choose a mode"}
+                </span>
               </span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="top" align="start" className="w-56">
-            <DropdownMenuLabel className="truncate">{userName}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/account">Account</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/account/ads">Advertise</Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/api/auth/signout">Sign out</Link>
-            </DropdownMenuItem>
+            <AccountMenuBody
+              userName={userName}
+              onboardingChoice={onboardingChoice}
+            />
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarFooter>

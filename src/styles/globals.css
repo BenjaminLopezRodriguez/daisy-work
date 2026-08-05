@@ -63,6 +63,86 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ==========================================================================
+   Navigation design system — docs/navigation-design-system.md §4.2
+   Additive. Non-`inline` @theme so utilities resolve through var() and the
+   `.dark` block below can re-point them.
+   ========================================================================== */
+@theme {
+  /* ---- Navigation semantic colors (light) ---- */
+  --color-nav-surface: oklch(1 0 0);
+  --color-nav-surface-scroll: oklch(1 0 0 / 0.92);
+  --color-nav-hairline: oklch(0.88 0.01 95);
+  --color-nav-ink: oklch(0.18 0.01 140);
+  --color-nav-ink-muted: oklch(0.48 0.015 140);
+  --color-nav-active: oklch(0.42 0.12 145); /* Field */
+  --color-nav-active-wash: oklch(0.42 0.12 145 / 0.1);
+  --color-nav-accent: oklch(0.9 0.14 100); /* Pollen */
+  --color-nav-accent-ink: oklch(0.25 0.04 145);
+  --color-nav-focus: oklch(0.42 0.12 145);
+
+  /* ---- Type scale with roles ---- */
+  --text-nav-label: 0.875rem; /* 14px — sidebar + header links */
+  --text-nav-label--line-height: 1.25rem;
+  --text-nav-label--font-weight: 500;
+
+  --text-tab-label: 0.625rem; /* 10px — mobile bottom bar */
+  --text-tab-label--line-height: 0.875rem;
+  --text-tab-label--font-weight: 500;
+
+  --text-chip: 0.8125rem; /* 13px — category rail chips */
+  --text-chip--line-height: 1.125rem;
+  --text-chip--font-weight: 500;
+
+  --text-search: 1rem; /* 16px — never smaller: iOS zooms below 16 */
+  --text-search--line-height: 1.5rem;
+
+  --text-crumb: 0.75rem; /* 12px — breadcrumbs */
+  --text-crumb--line-height: 1rem;
+
+  --text-card-title: 0.875rem;
+  --text-card-title--font-weight: 600;
+  --text-card-meta: 0.75rem;
+
+  /* ---- Navigation spacing ---- */
+  --spacing-nav-x: 0.75rem;
+  --spacing-nav-gap: 0.5rem;
+  --spacing-rail-gap: 0.5rem;
+  --spacing-grid-gutter: 1rem; /* 16px */
+  --spacing-section: 4rem; /* 64px */
+  --spacing-touch: 2.75rem; /* 44px floor */
+
+  /* ---- Navigation dimensions ---- */
+  --nav-header-h: 3.5rem; /* 56px, = existing --app-header-height */
+  --nav-header-h-md: 4rem; /* 64px desktop */
+  --nav-rail-h: 3rem; /* 48px category rail */
+  --nav-bottom-h: 4rem; /* = existing --mobile-nav-height */
+  --nav-sidebar-w: 15rem;
+  --nav-sidebar-w-icon: 3.25rem;
+  --nav-filter-rail-w: 15rem;
+  --nav-search-h: 2.75rem;
+  --nav-search-h-open: 3.5rem;
+
+  /* ---- Radii ---- */
+  --radius-nav-pill: 9999px; /* search control, chips */
+  --radius-nav-item: 0.5rem;
+  --radius-nav-card: 0.875rem; /* 14px */
+
+  /* ---- Elevation (restrained: 3 steps, no more) ---- */
+  --shadow-nav-flat: none;
+  --shadow-nav-raised: 0 1px 2px oklch(0.18 0.01 140 / 0.06);
+  --shadow-nav-float:
+    0 4px 16px oklch(0.18 0.01 140 / 0.1), 0 1px 3px oklch(0.18 0.01 140 / 0.06);
+
+  /* ---- Motion ---- */
+  --ease-nav-out: cubic-bezier(0.16, 1, 0.3, 1); /* entrances */
+  --ease-nav-inout: cubic-bezier(0.4, 0, 0.2, 1); /* state changes */
+  --duration-nav-instant: 100ms; /* press */
+  --duration-nav-fast: 150ms; /* hover, active, color */
+  --duration-nav-base: 200ms; /* collapse, chip, popover */
+  --duration-nav-sheet: 250ms; /* sheets, drawers */
+}
+
 :root {
   /* Daisy.work — warm white, near-black, deep green primary, limited yellow accent */
   --background: oklch(0.985 0.004 95);
@@ -150,6 +230,24 @@
   --sidebar-accent-foreground: oklch(0.96 0.005 95);
   --sidebar-border: oklch(1 0 0 / 12%);
   --sidebar-ring: oklch(0.72 0.1 145);
+
+  /* ---- Navigation design system — dark (§4.2) ---- */
+  --color-nav-surface: oklch(0.22 0.012 145);
+  --color-nav-surface-scroll: oklch(0.22 0.012 145 / 0.92);
+  --color-nav-hairline: oklch(1 0 0 / 0.12);
+  --color-nav-ink: oklch(0.96 0.005 95);
+  --color-nav-ink-muted: oklch(0.72 0.015 95);
+  --color-nav-active: oklch(0.72 0.1 145);
+  --color-nav-active-wash: oklch(0.72 0.1 145 / 0.16);
+  --color-nav-accent: oklch(0.78 0.14 100);
+  --color-nav-accent-ink: oklch(0.2 0.04 145);
+  --color-nav-focus: oklch(0.72 0.1 145);
+  --shadow-nav-raised: 0 1px 2px oklch(0 0 0 / 0.3);
+  --shadow-nav-float:
+    0 4px 16px oklch(0 0 0 / 0.45), 0 1px 3px oklch(0 0 0 / 0.3);
+  /* Derived: §4.2's dark block omits --shadow-nav-flat; `none` is themeless so
+     the light value carries over unchanged. Restated for symmetry. */
+  --shadow-nav-flat: none;
 }
 
 @layer base {
@@ -162,6 +260,16 @@
   body {
     @apply min-h-full overflow-x-hidden bg-background text-foreground antialiased;
   }
+  /* §6.4 — focus floor. :focus-visible only, uniform 2px ring at 2px offset.
+     Low specificity by design: components that pair `outline-none` with their
+     own `focus-visible:ring-*` (shadcn's pattern) still win. --color-nav-focus
+     and --ring resolve to the same value in both themes, so the treatment is
+     uniform either way. */
+  :focus-visible {
+    outline: 2px solid var(--color-nav-focus);
+    outline-offset: 2px;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -170,6 +278,17 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
+    }
+
+    /* §6.3 — collapse the nav motion tokens themselves, so any component
+       reading them (sheets, dropdowns, search collapse, press feedback)
+       resolves to an instant swap rather than a fast slide. */
+    :root,
+    .dark {
+      --duration-nav-instant: 0.01ms;
+      --duration-nav-fast: 0.01ms;
+      --duration-nav-base: 0.01ms;
+      --duration-nav-sheet: 0.01ms;
     }
   }
 }

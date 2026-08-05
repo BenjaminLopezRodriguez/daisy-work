@@ -6,10 +6,17 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { AppPage, EmptyState, PageHeader } from "@/components/daisy";
+import { Breadcrumbs } from "@/components/daisy/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@/domain";
 import { api } from "@/trpc/react";
+
+/** §3.3: `Browse › Services › {title}`. */
+const SERVICE_TRAIL = [
+  { label: "Browse", href: "/marketplace" },
+  { label: "Services", href: "/marketplace?scope=services" },
+];
 
 export default function ServicePublicView({
   serviceId,
@@ -34,6 +41,7 @@ export default function ServicePublicView({
   if (isLoading) {
     return (
       <AppPage width="form" className="max-w-2xl space-y-4">
+        <Breadcrumbs trail={SERVICE_TRAIL} page={null} />
         <Skeleton className="aspect-video w-full rounded-xl" />
         <Skeleton className="h-10 w-2/3" />
       </AppPage>
@@ -58,6 +66,8 @@ export default function ServicePublicView({
 
   return (
     <AppPage width="form" className="max-w-2xl space-y-6">
+      <Breadcrumbs trail={SERVICE_TRAIL} page={data.title} />
+
       {data.coverImageUrl ? (
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-muted">
           <Image
