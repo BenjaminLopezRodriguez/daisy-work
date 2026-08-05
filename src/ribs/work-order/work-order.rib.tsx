@@ -105,7 +105,7 @@ function ApplySection({
         description="You need an account to apply for this job."
         action={
           <Button asChild>
-            <Link href="/api/auth/signin">Sign in</Link>
+            <Link href="/signin">Sign in</Link>
           </Button>
         }
       />

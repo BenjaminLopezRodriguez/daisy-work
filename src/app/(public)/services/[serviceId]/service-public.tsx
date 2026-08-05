@@ -85,6 +85,15 @@ export default function ServicePublicView({
         {formatMoney(data.priceCents, "USD")}
       </p>
 
+      {data.workerProfileId ? (
+        <Link
+          href={`/providers/${data.workerProfileId}`}
+          className="inline-flex w-fit items-center text-sm font-medium underline underline-offset-4 hover:no-underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        >
+          View {data.ownerName ?? "provider"}’s profile
+        </Link>
+      ) : null}
+
       {data.description ? (
         <section className="rounded-xl border border-border bg-card p-4 text-sm">
           <h2 className="font-medium">What’s included</h2>

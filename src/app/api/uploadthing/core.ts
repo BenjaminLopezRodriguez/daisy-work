@@ -8,6 +8,7 @@ const f = createUploadthing();
 async function requireUser() {
   const session = await auth();
   if (!session?.user?.id) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- UploadThingError extends Error; the rule can't see through the package types.
     throw new UploadThingError("Unauthorized");
   }
   return { userId: session.user.id };
