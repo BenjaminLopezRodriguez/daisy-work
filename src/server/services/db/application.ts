@@ -13,6 +13,7 @@ export async function getJobForApply(workOrderId: string) {
   const [row] = await db
     .select({
       id: workOrders.id,
+      title: workOrders.title,
       requesterId: workOrders.requesterId,
       status: workOrders.status,
     })
@@ -22,12 +23,15 @@ export async function getJobForApply(workOrderId: string) {
   return row ?? null;
 }
 
-/** Idempotent: DB unique index is the source of truth; returns existing row on retry. */
+/**
+ * Idempotent: DB unique index is the source of truth; returns existing row on
+ * retry. `created` tells the caller whether to fire side effects.
+ */
 export async function insertApplication(input: {
   workOrderId: string;
   applicantId: string;
   message?: string | null;
-}): Promise<ApplicationRow> {
+}): Promise<ApplicationRow & { created: boolean }> {
   const [inserted] = await db
     .insert(applications)
     .values({
@@ -37,7 +41,7 @@ export async function insertApplication(input: {
     })
     .onConflictDoNothing()
     .returning();
-  if (inserted) return inserted;
+  if (inserted) return { ...inserted, created: true };
 
   const [existing] = await db
     .select()
@@ -50,7 +54,7 @@ export async function insertApplication(input: {
     )
     .limit(1);
   if (!existing) throw new Error("Failed to create application");
-  return existing;
+  return { ...existing, created: false };
 }
 
 export async function listApplicationsForJob(workOrderId: string) {

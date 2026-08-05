@@ -17,7 +17,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/responsive-dialog";
 import { cropImageToFile } from "@/lib/crop-image";
 import { useUploadThing } from "@/lib/uploadthing";
 import { cn } from "@/lib/utils";
@@ -86,12 +86,7 @@ export function ImageCropUpload({
   function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
     const { width, height } = e.currentTarget;
     const initial = centerCrop(
-      makeAspectCrop(
-        { unit: "%", width: 90 },
-        ASPECT[aspect],
-        width,
-        height,
-      ),
+      makeAspectCrop({ unit: "%", width: 90 }, ASPECT[aspect], width, height),
       width,
       height,
     );
@@ -120,14 +115,12 @@ export function ImageCropUpload({
 
   return (
     <div className={cn("space-y-2", className)}>
-      {label ? (
-        <p className="text-sm font-medium">{label}</p>
-      ) : null}
+      {label ? <p className="text-sm font-medium">{label}</p> : null}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div
           className={cn(
-            "relative overflow-hidden border border-border bg-muted",
+            "border-border bg-muted relative overflow-hidden border",
             previewClass,
           )}
         >
@@ -141,7 +134,7 @@ export function ImageCropUpload({
               unoptimized={false}
             />
           ) : (
-            <div className="flex size-full items-center justify-center text-xs text-muted-foreground">
+            <div className="text-muted-foreground flex size-full items-center justify-center text-xs">
               No photo
             </div>
           )}
@@ -162,9 +155,13 @@ export function ImageCropUpload({
             disabled={isUploading}
             onClick={() => inputRef.current?.click()}
           >
-            {isUploading ? "Uploading…" : value ? "Change photo" : "Upload photo"}
+            {isUploading
+              ? "Uploading…"
+              : value
+                ? "Change photo"
+                : "Upload photo"}
           </Button>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {aspect === "square"
               ? "Square crop for your profile."
               : "16:9 crop for service photos."}
@@ -173,7 +170,7 @@ export function ImageCropUpload({
       </div>
 
       {error ? (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-destructive text-sm">
           {error}
         </p>
       ) : null}
@@ -188,11 +185,14 @@ export function ImageCropUpload({
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {aspect === "square" ? "Crop profile photo" : "Crop service photo"}
+              {aspect === "square"
+                ? "Crop profile photo"
+                : "Crop service photo"}
             </DialogTitle>
           </DialogHeader>
+          {/* dvh, not vh: vh ignores the mobile URL bar and overflows. */}
           {src ? (
-            <div className="max-h-[60vh] overflow-auto">
+            <div className="max-h-[55dvh] overflow-auto">
               <ReactCrop
                 crop={crop}
                 onChange={(c) => setCrop(c)}
@@ -207,7 +207,7 @@ export function ImageCropUpload({
                   src={src}
                   alt="Crop preview"
                   onLoad={onImageLoad}
-                  className="max-h-[55vh] w-full object-contain"
+                  className="max-h-[50dvh] w-full object-contain"
                 />
               </ReactCrop>
             </div>

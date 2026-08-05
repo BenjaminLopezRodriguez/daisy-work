@@ -23,6 +23,7 @@ import {
 import { isNavActive, navForRole } from "@/lib/daisy/nav";
 import { MODE_LABEL } from "@/lib/daisy/role";
 
+import { NotificationBell } from "./notification-bell";
 import { AccountMenuBody } from "./role-switch";
 
 export function DesktopSidebar({
@@ -76,35 +77,41 @@ export function DesktopSidebar({
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="mt-auto border-t border-sidebar-border">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-md text-left text-sm outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-11 md:justify-start md:px-2 group-data-[collapsible=icon]:md:justify-center group-data-[collapsible=icon]:md:px-0"
-            >
-              <Avatar className="size-8 shrink-0">
-                {userAvatar ? (
-                  <AvatarImage src={userAvatar} alt="" />
-                ) : null}
-                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-              </Avatar>
-              <span className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                <span className="block truncate">{userName}</span>
-                {/* The mode must be legible without opening a menu. (§5.6) */}
-                <span className="text-nav-ink-muted block truncate text-xs">
-                  {onboardingChoice ? MODE_LABEL[onboardingChoice] : "Choose a mode"}
+      <SidebarFooter className="border-sidebar-border mt-auto border-t">
+        {/* Collapsed rail stacks; expanded rail puts the bell beside the avatar. */}
+        <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-md text-left text-sm outline-none group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-11 focus-visible:ring-2 md:justify-start md:px-2 group-data-[collapsible=icon]:md:justify-center group-data-[collapsible=icon]:md:px-0"
+              >
+                <Avatar className="size-8 shrink-0">
+                  {userAvatar ? <AvatarImage src={userAvatar} alt="" /> : null}
+                  <AvatarFallback className="text-xs">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+                  <span className="block truncate">{userName}</span>
+                  {/* The mode must be legible without opening a menu. (§5.6) */}
+                  <span className="text-nav-ink-muted block truncate text-xs">
+                    {onboardingChoice
+                      ? MODE_LABEL[onboardingChoice]
+                      : "Choose a mode"}
+                  </span>
                 </span>
-              </span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start" className="w-56">
-            <AccountMenuBody
-              userName={userName}
-              onboardingChoice={onboardingChoice}
-            />
-          </DropdownMenuContent>
-        </DropdownMenu>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" className="w-56">
+              <AccountMenuBody
+                userName={userName}
+                onboardingChoice={onboardingChoice}
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <NotificationBell />
+        </div>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

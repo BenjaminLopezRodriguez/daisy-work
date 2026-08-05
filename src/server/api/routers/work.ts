@@ -20,6 +20,7 @@ import {
 } from "@/server/services/db/service-listing";
 import { createOrchestratorModel } from "@/server/orchestrator/model/deepseek-orchestrator-model";
 import { createDraftFromPlan } from "@/server/orchestrator";
+import { notify } from "@/server/services/notify";
 import { workPlanSchema } from "@/server/orchestrator/orchestrator.types";
 
 /** Loads a work order the given user owns, or throws. */
@@ -136,6 +137,16 @@ export const workRouter = createTRPCRouter({
         )
         .returning();
       if (!row) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (row.assigneeId) {
+        await notify({
+          userId: row.assigneeId,
+          title: `Request cancelled: “${row.title}”`,
+          body: "The customer cancelled this request.",
+          href: `/work/${row.id}`,
+        });
+      }
+
       return { ok: true as const };
     }),
 
@@ -158,7 +169,10 @@ export const workRouter = createTRPCRouter({
       const userId = ctx.session.user.id;
       const listing = await getServiceById(input.serviceListingId);
       if (listing?.status !== "active") {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Service not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Service not found",
+        });
       }
       if (listing.ownerUserId === userId) {
         throw new TRPCError({
@@ -197,6 +211,13 @@ export const workRouter = createTRPCRouter({
         assigneeType: "human",
       });
 
+      await notify({
+        userId: listing.ownerUserId,
+        title: `New request for “${listing.title}”`,
+        body: `${ctx.session.user.name ?? "Someone"} requested your service.`,
+        href: `/work/${assigned.id}`,
+      });
+
       return { workOrderId: assigned.id };
     }),
 
@@ -221,7 +242,11 @@ export const workRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       const [wo] = await db
-        .select({ id: workOrders.id })
+        .select({
+          id: workOrders.id,
+          title: workOrders.title,
+          requesterId: workOrders.requesterId,
+        })
         .from(workOrders)
         .where(eq(workOrders.id, input.workOrderId))
         .limit(1);
@@ -278,6 +303,15 @@ export const workRouter = createTRPCRouter({
           }),
         )
         .returning();
+
+      if (wo.requesterId !== userId) {
+        await notify({
+          userId: wo.requesterId,
+          title: `Work submitted on “${wo.title}”`,
+          body: `${ctx.session.user.name ?? "The provider"} uploaded ${rows.length} file${rows.length === 1 ? "" : "s"} for review.`,
+          href: `/work/${wo.id}`,
+        });
+      }
 
       return {
         submissionId: submission.id,

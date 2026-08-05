@@ -17,6 +17,9 @@ export const env = createEnv({
     DEEPSEEK_MODEL: z.string().optional(),
     UPLOADTHING_TOKEN: z.string().min(1),
     UPLOADTHING_APP_ID: z.string().optional(),
+    /** Both unset = notifications stay in-app only. */
+    RESEND_API_KEY: z.string().optional(),
+    RESEND_EMAIL_DOMAIN: z.string().optional(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -46,6 +49,8 @@ export const env = createEnv({
     DEEPSEEK_MODEL: process.env.DEEPSEEK_MODEL,
     UPLOADTHING_TOKEN: process.env.UPLOADTHING_TOKEN,
     UPLOADTHING_APP_ID: process.env.UPLOADTHING_APP_ID,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    RESEND_EMAIL_DOMAIN: process.env.RESEND_EMAIL_DOMAIN,
     NODE_ENV: process.env.NODE_ENV,
   },
   /**

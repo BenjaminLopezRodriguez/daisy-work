@@ -9,6 +9,7 @@ import {
   listApplicationsForApplicant,
   listApplicationsForJob,
 } from "@/server/services/db/application";
+import { notify } from "@/server/services/notify";
 
 const workOrderIdInput = z.object({ workOrderId: z.string().uuid() });
 
@@ -24,7 +25,7 @@ export const applicationRouter = createTRPCRouter({
       const userId = ctx.session.user.id;
       const job = await getJobForApply(input.workOrderId);
       const denial = applyDenialReason(job, userId);
-      if (denial === "NOT_FOUND")
+      if (denial === "NOT_FOUND" || !job)
         throw new TRPCError({ code: "NOT_FOUND", message: "Job not found" });
       if (denial === "NOT_PUBLISHED")
         throw new TRPCError({
@@ -37,11 +38,23 @@ export const applicationRouter = createTRPCRouter({
           message: "You can't apply to your own job",
         });
 
-      return insertApplication({
+      const application = await insertApplication({
         workOrderId: input.workOrderId,
         applicantId: userId,
         message: input.message,
       });
+
+      // Only on first submit — re-applying must not re-notify.
+      if (application.created) {
+        await notify({
+          userId: job.requesterId,
+          title: `New application on “${job.title}”`,
+          body: `${ctx.session.user.name ?? "Someone"} applied to your job.`,
+          href: `/work/${input.workOrderId}`,
+        });
+      }
+
+      return application;
     }),
 
   /** Only the job's owner may see applicants. */

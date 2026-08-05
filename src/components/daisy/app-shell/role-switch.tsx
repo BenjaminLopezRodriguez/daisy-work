@@ -135,6 +135,52 @@ export function AccountMenuBody({
 }
 
 /**
+ * Mobile account menu. A bottom drawer, not a dropdown — thumb reach, and it
+ * gives the role rows room to be real 56px targets. (§5.6)
+ */
+export function AccountDrawerBody({
+  onboardingChoice,
+  onNavigate,
+}: {
+  onboardingChoice: OnboardingChoice | null;
+  onNavigate: () => void;
+}) {
+  return (
+    <div className="space-y-4 px-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
+      <div>
+        <p className="text-nav-ink-muted mb-2 text-[0.6875rem] font-medium tracking-wide uppercase">
+          Viewing as
+        </p>
+        <RoleSwitchRows onboardingChoice={onboardingChoice} />
+      </div>
+      <div className="border-border bg-card divide-border divide-y overflow-hidden rounded-xl border">
+        <Link
+          href="/account"
+          onClick={onNavigate}
+          className="focus-visible:ring-nav-focus flex min-h-14 items-center px-4 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+        >
+          Account
+        </Link>
+        <Link
+          href="/account/ads"
+          onClick={onNavigate}
+          className="focus-visible:ring-nav-focus flex min-h-14 items-center px-4 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+        >
+          Advertise
+        </Link>
+        <button
+          type="button"
+          onClick={() => void signOut({ redirectTo: "/signin" })}
+          className="focus-visible:ring-nav-focus flex min-h-14 w-full items-center px-4 text-left text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+        >
+          Sign out
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Mobile anatomy (§5.6): the same radio group as two full-width rows on
  * `/account`, not hidden behind a menu on the settings surface itself.
  */

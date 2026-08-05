@@ -7,3 +7,4 @@ export * from "./services";
 export * from "./work-orders";
 export * from "./lifecycle";
 export * from "./ads";
+export * from "./notifications";
