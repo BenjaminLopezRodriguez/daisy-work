@@ -52,3 +52,4 @@ yarn-error.log*
 
 # pnpm content-addressable store (must never be committed)
 .pnpm-store/
+.playwright-mcp/

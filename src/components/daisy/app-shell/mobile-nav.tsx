@@ -18,6 +18,8 @@ import { isNavActive, navForRole, parentForPath } from "@/lib/daisy/nav";
 import { MODE_LABEL } from "@/lib/daisy/role";
 import { cn } from "@/lib/utils";
 
+import { Logo } from "@/components/daisy/logo";
+
 import { NotificationBell } from "./notification-bell";
 import { AccountDrawerBody } from "./role-switch";
 
@@ -64,9 +66,7 @@ export function MobileHeader({
 
       <p className="text-nav-ink min-w-0 flex-1 truncate text-base font-semibold tracking-tight">
         {title ?? (
-          <>
-            Daisy<span className="text-nav-active">.work</span>
-          </>
+          <Logo className="text-base" accentClassName="text-nav-active" />
         )}
       </p>
 

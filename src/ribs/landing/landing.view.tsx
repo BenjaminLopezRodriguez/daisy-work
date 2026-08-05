@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { AdSlot } from "@/components/daisy/ad-slot";
 import { CategoryCards } from "@/components/daisy/category-cards";
+import { Logo } from "@/components/daisy/logo";
 import { formatMoney } from "@/domain";
 import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
@@ -198,11 +199,8 @@ export function LandingView() {
         )}
       >
         <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-3 sm:px-6">
-          <Link
-            href="/"
-            className="shrink-0 text-base font-semibold tracking-tight"
-          >
-            Daisy<span className="text-primary">.work</span>
+          <Link href="/" className="shrink-0">
+            <Logo className="text-base" markClassName="size-6" />
           </Link>
 
           {/* Takes over from the hero box once it scrolls out of view. */}
@@ -254,63 +252,82 @@ export function LandingView() {
       </header>
 
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-12 px-4 pt-10 pb-16 sm:px-6 sm:pt-16">
-        <section className="mx-auto w-full max-w-2xl space-y-5 text-center">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              Describe what you need. Daisy finds the match.
-            </h1>
-            <p className="text-muted-foreground text-sm text-pretty sm:text-base">
-              Search in plain words. If nobody offers it, send it as a request.
-            </p>
-          </div>
-
-          {/* One action: search. Posting is offered from the empty state, when
-              searching has actually failed to find anything. */}
-          <form
-            ref={heroRef}
-            className="border-border bg-card rounded-2xl border p-3 text-left shadow-sm"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void searchServices();
-            }}
-          >
-            <Textarea
-              ref={promptRef}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  void searchServices();
-                }
-              }}
-              rows={3}
-              placeholder="e.g. licensed electrician for a panel upgrade near me"
-              aria-label="Search services"
-              className="min-h-20 resize-none border-0 bg-transparent p-1 shadow-none focus-visible:ring-0"
-            />
-            <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-              <Button
-                type="submit"
-                className="min-h-10 gap-1.5"
-                disabled={parse.isPending || prompt.trim().length === 0}
-                aria-busy={parse.isPending}
-              >
-                <Search className="size-4" aria-hidden />
-                {parse.isPending ? "Searching…" : "Search"}
-              </Button>
-            </div>
-          </form>
-
-          {/* Directly under the search box: somewhere to go for the visitor who
-              has not decided what to type yet. */}
-          <CategoryCards
-            categories={categories}
-            selected={category}
-            onSelect={setCategory}
-            className="pt-2"
+        <section className="relative isolate mx-auto w-full max-w-3xl overflow-hidden rounded-3xl px-4 py-14 text-center sm:px-8 sm:py-20">
+          <Image
+            src="/asset/hero-daisies.jpg"
+            alt=""
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 768px"
+            className="-z-10 object-cover object-[50%_35%]"
           />
+          {/* A scrim, not a wash: heavy enough behind the heading to pass
+              contrast, light at the edges so the photograph is still a
+              photograph. A flat 45% made it read as a blue rectangle. */}
+          <div
+            aria-hidden
+            className="absolute inset-0 -z-10 bg-gradient-to-b from-black/60 via-black/30 to-black/40"
+          />
+
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-semibold tracking-tight text-balance text-white drop-shadow-sm sm:text-4xl">
+                Describe what you need. Daisy finds the match.
+              </h1>
+              <p className="text-sm text-pretty text-white/90 sm:text-base">
+                Search in plain words. If nobody offers it, send it as a
+                request.
+              </p>
+            </div>
+
+            {/* One action: search. Posting is offered from the empty state, when
+              searching has actually failed to find anything. */}
+            <form
+              ref={heroRef}
+              className="bg-card/95 rounded-2xl p-3 text-left shadow-lg ring-1 ring-black/5 backdrop-blur"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void searchServices();
+              }}
+            >
+              <Textarea
+                ref={promptRef}
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void searchServices();
+                  }
+                }}
+                rows={3}
+                placeholder="e.g. licensed electrician for a panel upgrade near me"
+                aria-label="Search services"
+                className="min-h-20 resize-none border-0 bg-transparent p-1 shadow-none focus-visible:ring-0"
+              />
+              <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+                <Button
+                  type="submit"
+                  className="min-h-10 gap-1.5"
+                  disabled={parse.isPending || prompt.trim().length === 0}
+                  aria-busy={parse.isPending}
+                >
+                  <Search className="size-4" aria-hidden />
+                  {parse.isPending ? "Searching…" : "Search"}
+                </Button>
+              </div>
+            </form>
+          </div>
         </section>
+
+        {/* Directly under the search box, but off the photograph — cards on top
+            of petals is two busy things fighting. */}
+        <CategoryCards
+          categories={categories}
+          selected={category}
+          onSelect={setCategory}
+          className="-mt-6"
+        />
 
         <AdSlot placement="landing" title="Featured partners" />
 

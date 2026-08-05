@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { Logo } from "@/components/daisy/logo";
+
 import { Button } from "@/components/ui/button";
 import { SIGNED_OUT_NAV } from "@/lib/daisy/nav";
 
@@ -14,11 +16,8 @@ export function PublicHeader({ signedIn }: { signedIn: boolean }) {
   return (
     <header className="border-border bg-background sticky top-0 z-40 border-b">
       <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-3 sm:px-6">
-        <Link
-          href="/"
-          className="shrink-0 text-base font-semibold tracking-tight"
-        >
-          Daisy<span className="text-primary">.work</span>
+        <Link href="/" className="shrink-0">
+          <Logo className="text-base" />
         </Link>
 
         {/* Browse folds away on narrow screens; the bottom nav carries it
