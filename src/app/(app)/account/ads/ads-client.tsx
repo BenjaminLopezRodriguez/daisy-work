@@ -197,7 +197,7 @@ export default function AccountAdsPage() {
             id="headline"
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
-            placeholder="Licensed electrician — panel upgrades"
+            placeholder="Licensed electrician, panel upgrades"
             required
             maxLength={128}
           />

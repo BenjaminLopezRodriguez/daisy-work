@@ -68,7 +68,7 @@ export function MobileHeader({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            aria-label={`Account menu — ${onboardingChoice ? MODE_LABEL[onboardingChoice] : "no mode chosen"}`}
+            aria-label={`Account menu, ${onboardingChoice ? MODE_LABEL[onboardingChoice] : "no mode chosen"}`}
             className="-mr-1 flex size-11 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-nav-focus"
           >
             <Avatar className="size-8">
@@ -123,11 +123,11 @@ export function MobileBottomNav({
                 <Link
                   href={tab.href}
                   aria-current={active ? "page" : undefined}
-                  className="text-nav-ink-muted flex h-full flex-col items-center justify-end gap-0.5 pb-1.5 text-[length:var(--text-tab-label,0.625rem)] font-medium focus-visible:ring-2 focus-visible:ring-nav-focus focus-visible:ring-inset focus-visible:outline-none"
+                  className="text-nav-ink-muted flex h-full min-h-12 flex-col items-center justify-center gap-0.5 text-[length:var(--text-tab-label,0.625rem)] font-medium focus-visible:ring-2 focus-visible:ring-nav-focus focus-visible:ring-inset focus-visible:outline-none"
                 >
                   <span
                     className={cn(
-                      "absolute -top-[18px] left-1/2 flex size-14 -translate-x-1/2 items-center justify-center rounded-full bg-nav-active text-primary-foreground shadow-nav-float",
+                      "absolute -top-5 left-1/2 flex size-12 -translate-x-1/2 items-center justify-center rounded-full bg-nav-active text-primary-foreground shadow-nav-float",
                       "transition-transform duration-100 active:scale-96",
                       active && "ring-2 ring-nav-active ring-offset-2",
                     )}
@@ -135,7 +135,10 @@ export function MobileBottomNav({
                   >
                     <Icon className="size-6" />
                   </span>
-                  <span className="mt-7">{tab.label}</span>
+                  {/* Reserves the same space the other tabs' icons take, so
+                      every label sits on one line. */}
+                  <span className="size-5" aria-hidden />
+                  {tab.label}
                 </Link>
               </li>
             );

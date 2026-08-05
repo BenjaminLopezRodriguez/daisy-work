@@ -6,7 +6,7 @@ import { Geist } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TRPCReactProvider } from "@/trpc/react";
 
-const title = "Daisy.work — Describe a job, get it posted";
+const title = "Daisy.work: describe a job, get it posted";
 const description =
   "Describe the job you need done in plain words. Daisy writes the posting, you publish it, and people apply.";
 const url = "https://daisy-work.vercel.app";

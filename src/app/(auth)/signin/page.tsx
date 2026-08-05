@@ -6,19 +6,31 @@ import { auth, signIn } from "@/server/auth";
 import { api } from "@/trpc/server";
 import { postAuthPath } from "@/lib/daisy/role";
 
-async function signInAsWorker() {
-  "use server";
-  await signIn("google", { redirectTo: "/welcome?intent=provide" });
+/** Only same-origin paths may be returned to. */
+function safeNext(next: string | undefined): string | null {
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : null;
 }
 
-async function signInAsCustomer() {
-  "use server";
-  await signIn("google", { redirectTo: "/welcome?intent=hire" });
-}
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const next = safeNext((await searchParams).next);
 
-export default async function SignInPage() {
+  async function signInAsWorker() {
+    "use server";
+    await signIn("google", { redirectTo: next ?? "/welcome?intent=provide" });
+  }
+
+  async function signInAsCustomer() {
+    "use server";
+    await signIn("google", { redirectTo: next ?? "/welcome?intent=hire" });
+  }
+
   const session = await auth();
   if (session?.user) {
+    if (next) redirect(next);
     const { choice, profile } = await api.provider.status();
     if (choice === "hire" || choice === "provide") {
       redirect(postAuthPath(choice, profile !== null));
@@ -32,7 +44,7 @@ export default async function SignInPage() {
         <div className="space-y-1 text-center">
           <h1 className="text-xl font-medium">Sign in to Daisy.work</h1>
           <p className="text-sm text-muted-foreground">
-            Two sides of the market — pick how you&apos;re using it today.
+            Pick how you&apos;re using Daisy today.
           </p>
         </div>
 

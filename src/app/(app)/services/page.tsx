@@ -67,10 +67,10 @@ export default function ServicesPage() {
     try {
       const s = await suggest.mutateAsync({ hint: trimmed });
       if (!s) {
-        setDraftNote("Daisy couldn’t draft this right now — fill it in below.");
+        setDraftNote("Daisy couldn’t draft this right now. Fill it in below.");
         toast.error("Daisy couldn’t draft this right now", {
           id: toastId,
-          description: "Fill the form in below — nothing was changed.",
+          description: "Nothing was changed. Fill the form in below.",
         });
         return;
       }
@@ -101,7 +101,7 @@ export default function ServicesPage() {
       setDraftNote(
         kept.length
           ? `Draft ready. Kept what you already typed: ${kept.join(", ")}.`
-          : "Draft ready. Every field is editable — nothing is saved yet.",
+          : "Draft ready. Everything is editable and nothing is saved yet.",
       );
       toast.success("Draft ready", {
         id: toastId,
@@ -110,10 +110,10 @@ export default function ServicesPage() {
           : "Review it, edit anything, then publish.",
       });
     } catch {
-      setDraftNote("Daisy couldn’t draft this right now — fill it in below.");
+      setDraftNote("Daisy couldn’t draft this right now. Fill it in below.");
       toast.error("Daisy couldn’t draft this right now", {
         id: toastId,
-        description: "Fill the form in below — nothing was changed.",
+        description: "Nothing was changed. Fill the form in below.",
       });
     }
   }
@@ -212,7 +212,7 @@ export default function ServicesPage() {
         >
           <div className="space-y-2 rounded-lg border border-dashed border-border p-3">
             <Label htmlFor="hint">
-              Describe what you do — Daisy drafts the listing
+              Describe what you do and Daisy drafts the listing
             </Label>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Input
@@ -241,7 +241,7 @@ export default function ServicesPage() {
               </Button>
             </div>
             <p id="hint-help" className="text-xs text-muted-foreground">
-              Optional. Fills only fields you’ve left empty — nothing is saved
+              Fills only the fields you left empty. Nothing is saved
               until you publish.
             </p>
             <p role="status" aria-live="polite" className="text-xs text-muted-foreground">
@@ -311,7 +311,7 @@ export default function ServicesPage() {
                     ? `Median of ${priceBasis.sampleSize} similar listing${
                         priceBasis.sampleSize === 1 ? "" : "s"
                       }: ${formatMoney(priceBasis.medianCents, "USD")}`
-                    : "No similar listings yet — this is a starting point."}
+                    : "No similar listings yet, so this is a starting point."}
                 </p>
               ) : null}
             </div>

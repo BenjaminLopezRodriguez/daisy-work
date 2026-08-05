@@ -1,17 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
-import {
-  AppPage,
-  FormField,
-  PageHeader,
-  StepProgress,
-} from "@/components/daisy";
+import { AppPage, FormField, PageHeader } from "@/components/daisy";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,9 +23,23 @@ import type { WorkPlan } from "@/server/orchestrator/orchestrator.types";
 import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
 
-const STAGES = ["Describe", "Match", "Done"] as const;
+/**
+ * A signed-out visitor's own draft, parked across the Google sign-in redirect.
+ * Plan only — never tokens.
+ */
+const PENDING_KEY = "daisy.create.pending";
+type PendingSave = { plan: WorkPlan; serviceListingId?: string };
 
-export function CreateWorkView() {
+function readPending(): PendingSave | null {
+  try {
+    const raw = sessionStorage.getItem(PENDING_KEY);
+    return raw ? (JSON.parse(raw) as PendingSave) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function CreateWorkView({ signedIn }: { signedIn: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedService = searchParams.get("service");
@@ -45,6 +54,8 @@ export function CreateWorkView() {
   const [doneId, setDoneId] = useState<string | null>(null);
 
   const planMutation = api.orchestrator.planAndDraft.useMutation();
+  const previewMutation = api.orchestrator.planPreview.useMutation();
+  const createMutation = api.orchestrator.createFromPlan.useMutation();
   const updateMutation = api.orchestrator.updateDraft.useMutation();
   const publishMutation = api.work.publish.useMutation();
   const requestMutation = api.work.requestService.useMutation();
@@ -64,18 +75,34 @@ export function CreateWorkView() {
   const ready = message.trim().length >= 10;
   const busy =
     planMutation.isPending ||
+    previewMutation.isPending ||
+    createMutation.isPending ||
     updateMutation.isPending ||
     publishMutation.isPending ||
     requestMutation.isPending;
 
+  /** Park the draft, then go get an account. Sign-in is the save step. */
+  const saveAndSignIn = (pending: PendingSave) => {
+    try {
+      sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending));
+    } catch {
+      // Storage blocked — sign-in still works, the draft just won't survive.
+    }
+    router.push("/signin?next=/create");
+  };
+
   const prepareDraft = async () => {
     const toastId = toast.loading("Finding matches…");
     try {
-      const result = await planMutation.mutateAsync({ message });
+      const result = signedIn
+        ? await planMutation.mutateAsync({ message })
+        : await previewMutation.mutateAsync({ message });
+      // The planner always drafts now; it never sends questions back. Kept as a
+      // guard so an old response shape can't leave the user on a dead screen.
       if (result.kind === "ask_user") {
-        toast.message("Need a bit more", {
+        toast.error("Could not write that up", {
           id: toastId,
-          description: result.question,
+          description: "Try describing it once more.",
         });
         return;
       }
@@ -86,18 +113,22 @@ export function CreateWorkView() {
         });
         return;
       }
+      const newDraftId =
+        "draftId" in result && typeof result.draftId === "string"
+          ? result.draftId
+          : null;
       setPlan(result.plan);
-      setDraftId(result.draftId);
+      setDraftId(newDraftId);
       setStage(1);
       toast.success("Here’s your brief", {
         id: toastId,
         description: result.explanation,
       });
-      void utils.work.list.invalidate();
+      if (signedIn) void utils.work.list.invalidate();
 
       // Deep-link: request a specific service immediately after draft.
       if (preselectedService) {
-        await requestService(preselectedService, result.draftId, result.plan);
+        await requestService(preselectedService, newDraftId, result.plan);
       }
     } catch {
       toast.error("Could not prepare brief", { id: toastId });
@@ -120,6 +151,10 @@ export function CreateWorkView() {
     id = draftId,
     p = plan,
   ) => {
+    if (!signedIn) {
+      if (p) saveAndSignIn({ plan: p, serviceListingId });
+      return;
+    }
     const toastId = toast.loading("Sending request…");
     try {
       if (id && p) {
@@ -146,7 +181,52 @@ export function CreateWorkView() {
     }
   };
 
+  /**
+   * Back from sign-in with a parked draft: persist it and drop them on it.
+   * Kept in storage until the save succeeds so a failure never eats the draft.
+   */
+  const resumeSave = async (pending: PendingSave) => {
+    const toastId = toast.loading("Saving your draft…");
+    try {
+      const { draftId: id } = await createMutation.mutateAsync({
+        plan: pending.plan,
+      });
+      sessionStorage.removeItem(PENDING_KEY);
+      setDraftId(id);
+      void utils.work.list.invalidate();
+      if (pending.serviceListingId) {
+        toast.dismiss(toastId);
+        await requestService(pending.serviceListingId, id, pending.plan);
+        return;
+      }
+      toast.success("Draft saved", { id: toastId });
+      router.push(`/work/${id}`);
+    } catch {
+      toast.error("Couldn’t save your draft", {
+        id: toastId,
+        description: "It’s still here. Post again to retry.",
+      });
+    }
+  };
+
+  const resumed = useRef(false);
+  useEffect(() => {
+    if (!signedIn || resumed.current) return;
+    const pending = readPending();
+    if (!pending) return;
+    resumed.current = true;
+    setPlan(pending.plan);
+    setStage(1);
+    void resumeSave(pending);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signedIn]);
+
   const publishOpenJob = async () => {
+    if (!signedIn) {
+      if (plan) saveAndSignIn({ plan });
+      setPublishOpen(false);
+      return;
+    }
     if (!draftId) return;
     const toastId = toast.loading("Posting…");
     try {
@@ -169,19 +249,14 @@ export function CreateWorkView() {
     <AppPage width="form" className="max-w-2xl space-y-8">
       <PageHeader
         title="What do you need?"
-        description="Describe it. Daisy matches you with services — or you can post an open job."
+        description="Describe it. Daisy finds matching services, or you can post an open job."
       />
-
-      <StepProgress steps={[...STAGES]} currentIndex={stage} />
 
       {stage === 0 ? (
         <section className="space-y-4">
-          <FormField
-            id="need"
-            label="What do you need done?"
-            required
-            helper="One or two sentences is enough."
-          >
+          {/* Single field, so no asterisk and no helper row: the placeholder
+              already shows the expected shape. */}
+          <FormField id="need" label="What do you need done?">
             <Textarea
               id="need"
               value={message}
@@ -202,7 +277,7 @@ export function CreateWorkView() {
             disabled={!ready || busy}
             onClick={() => void prepareDraft()}
           >
-            {busy ? "Working…" : "Find matches"}
+            {busy ? "Writing it up…" : "Send request"}
           </Button>
         </section>
       ) : null}
@@ -210,10 +285,7 @@ export function CreateWorkView() {
       {stage === 1 && plan ? (
         <section className="space-y-6">
           <div className="space-y-4 rounded-xl border border-border bg-card p-4">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Your brief
-            </p>
-            <FormField id="title" label="Title" required>
+            <FormField id="title" label="Title">
               <Input
                 id="title"
                 value={plan.title}
@@ -236,6 +308,14 @@ export function CreateWorkView() {
               · {plan.workMode.replaceAll("_", " ")}
             </p>
           </div>
+
+          {!signedIn ? (
+            <p className="text-xs text-muted-foreground" role="status" aria-live="polite">
+              {busy
+                ? "Working…"
+                : "Not saved yet. You sign in when you post."}
+            </p>
+          ) : null}
 
           <div className="space-y-3">
             <h2 className="text-sm font-medium">Matched services</h2>
@@ -298,7 +378,7 @@ export function CreateWorkView() {
             <Button
               type="button"
               variant="ghost"
-              disabled={busy || !draftId}
+              disabled={busy || (signedIn && !draftId)}
               onClick={() => setPublishOpen(true)}
             >
               Post as open job instead
@@ -354,7 +434,7 @@ export function CreateWorkView() {
               disabled={busy}
               onClick={() => void publishOpenJob()}
             >
-              {busy ? "Posting…" : "Post publicly"}
+              {busy ? "Posting…" : signedIn ? "Post publicly" : "Sign in & post"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -363,6 +443,6 @@ export function CreateWorkView() {
   );
 }
 
-export function CreateWorkScreen() {
-  return <CreateWorkView />;
+export function CreateWorkScreen({ signedIn }: { signedIn: boolean }) {
+  return <CreateWorkView signedIn={signedIn} />;
 }

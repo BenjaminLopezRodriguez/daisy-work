@@ -5,9 +5,9 @@ import { MockOrchestratorModel } from "./model/mock-orchestrator-model";
 describe("MockOrchestratorModel", () => {
   const model = new MockOrchestratorModel();
 
-  it("asks for more detail when the message is too short", async () => {
+  it("drafts even a very short message instead of asking questions", async () => {
     const plan = await model.plan({ message: "Help", userId: "u1" });
-    expect(plan.kind).toBe("ask_user");
+    expect(plan.kind).toBe("work_draft");
   });
 
   it("drafts licensed electrical work in plain language", async () => {

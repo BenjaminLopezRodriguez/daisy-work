@@ -29,8 +29,11 @@ Given a user's plain description of work they need done, return ONLY valid JSON 
   }
 }
 Rules:
-- Prefer work_draft when the ask is clear enough to post.
-- Use ask_user only when critical info is missing (what, where, or outcome).
+- ALWAYS return work_draft. Never ask the user for more information: they came
+  here to get the request out, not to fill in a form. Missing details are left
+  out or given a sensible placeholder the user can edit.
+- Set needsConfirmation true when you had to assume something important, so the
+  UI can point at the field. Do not turn that into a question.
 - Keep copy plain and client-facing. No governance jargon.
 - budgetAmount is integer cents (e.g. $250 = 25000).`;
 
@@ -43,12 +46,8 @@ export class DeepSeekOrchestratorModel implements OrchestratorModel {
 
   async plan(input: OrchestratorInput): Promise<OrchestratorPlan> {
     const message = input.message.trim();
-    if (message.length < 10) {
-      return {
-        kind: "ask_user",
-        question: "Add a bit more detail — what needs to be done?",
-      };
-    }
+    // Very short asks still get a draft. The user edits it; we don't interrogate.
+    if (message.length < 10) return new MockOrchestratorModel().plan(input);
 
     try {
       const res = await fetch(`${this.baseUrl}/chat/completions`, {
@@ -87,8 +86,10 @@ export class DeepSeekOrchestratorModel implements OrchestratorModel {
         plan?: unknown;
       };
 
-      if (parsed.kind === "ask_user" && parsed.question) {
-        return { kind: "ask_user", question: parsed.question };
+      // The model was told never to ask. If it does anyway, draft from the
+      // message instead of bouncing the question back to the user.
+      if (parsed.kind === "ask_user" || !parsed.plan) {
+        return new MockOrchestratorModel().plan(input);
       }
 
       const plan = workPlanSchema.parse(parsed.plan);

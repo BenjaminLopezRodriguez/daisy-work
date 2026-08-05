@@ -95,12 +95,6 @@ function inferPlan(message: string): WorkPlan {
 export class MockOrchestratorModel implements OrchestratorModel {
   async plan(input: OrchestratorInput): Promise<OrchestratorPlan> {
     const message = input.message.trim();
-    if (message.length < 10) {
-      return {
-        kind: "ask_user",
-        question: "Add a bit more detail — what needs to be done, and where?",
-      };
-    }
 
     const plan = inferPlan(message);
     return {

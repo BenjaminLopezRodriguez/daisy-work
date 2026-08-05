@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const alt =
-  "Daisy.work — describe a job in plain words, Daisy writes the posting";
+  "Describe a job in plain words. Daisy writes the posting.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

@@ -40,7 +40,7 @@ export default function AccountPage() {
     <AppPage width="form" className="max-w-xl space-y-8">
       <PageHeader
         title="Account"
-        description="Edit your profile, postings, and ads — and track how far they reach."
+        description="Edit your profile, postings and ads, and see how far they reach."
       />
 
       <ImageCropUpload

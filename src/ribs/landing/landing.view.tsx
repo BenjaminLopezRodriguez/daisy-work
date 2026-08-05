@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -38,7 +37,6 @@ function priceLabel(job: {
 }
 
 export function LandingView() {
-  const router = useRouter();
   const [prompt, setPrompt] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
@@ -123,12 +121,6 @@ export function LandingView() {
     if (jobs.length === 0) return null;
     return `${jobs.length} open ${jobs.length === 1 ? "job" : "jobs"}`;
   }, [jobs.length, searchQuery]);
-
-  const requestJob = () => {
-    const text = prompt.trim();
-    if (!text) return;
-    router.push(`/create?q=${encodeURIComponent(text)}`);
-  };
 
   // Search answers on this page. Daisy reads filters out of the query and they
   // land on the grid below — no second screen, no filter form to fill in.
@@ -251,17 +243,18 @@ export function LandingView() {
               Describe what you need. Daisy finds the match.
             </h1>
             <p className="text-sm text-muted-foreground text-pretty sm:text-base">
-              Say what you need in plain words. You review it, publish it, and
-              people apply. Or search jobs already posted.
+              Search in plain words. If nobody offers it, send it as a request.
             </p>
           </div>
 
+          {/* One action: search. Posting is offered from the empty state, when
+              searching has actually failed to find anything. */}
           <form
             ref={heroRef}
             className="rounded-2xl border border-border bg-card p-3 text-left shadow-sm"
             onSubmit={(e) => {
               e.preventDefault();
-              requestJob();
+              void searchJobs();
             }}
           >
             <Textarea
@@ -271,32 +264,23 @@ export function LandingView() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  requestJob();
+                  void searchJobs();
                 }
               }}
               rows={3}
-              placeholder="e.g. Need a licensed electrician for a panel upgrade…"
-              aria-label="Describe a job or search"
+              placeholder="e.g. licensed electrician for a panel upgrade near me"
+              aria-label="Search jobs"
               className="min-h-20 resize-none border-0 bg-transparent p-1 shadow-none focus-visible:ring-0"
             />
             <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
               <Button
-                type="button"
-                variant="outline"
+                type="submit"
                 className="min-h-10 gap-1.5"
-                onClick={() => void searchJobs()}
                 disabled={parse.isPending || prompt.trim().length === 0}
                 aria-busy={parse.isPending}
               >
                 <Search className="size-4" aria-hidden />
                 {parse.isPending ? "Searching…" : "Search"}
-              </Button>
-              <Button
-                type="submit"
-                className="min-h-10"
-                disabled={prompt.trim().length === 0}
-              >
-                Write the posting
               </Button>
             </div>
           </form>
@@ -323,9 +307,6 @@ export function LandingView() {
 
           {appliedChips.length > 0 ? (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-muted-foreground">
-                Daisy read from your search:
-              </span>
               {appliedChips.map((chip) => (
                 <button
                   key={chip.key}
@@ -390,15 +371,42 @@ export function LandingView() {
               ))}
             </div>
           ) : jobs.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border px-5 py-12 text-center">
+            /* Nothing to show, so offer the other half of the marketplace:
+               turn what they searched for into a job posting. */
+            <div className="rounded-xl border border-border bg-card p-6 text-center">
               <p className="text-sm font-medium">
-                {searchQuery ? "No jobs match that search" : "No jobs yet"}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
                 {searchQuery
-                  ? "Try different words, or describe the job you need above."
-                  : "Nothing has been posted yet. Describe a job above to post the first one."}
+                  ? "Nothing open for that right now"
+                  : "Nothing open right now"}
               </p>
+              <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+                Send it as a request instead. Daisy works out which skills it
+                needs, tags it, and puts it in front of the people who do that
+                work.
+              </p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <Button asChild className="min-h-10">
+                  <Link
+                    href={
+                      searchQuery
+                        ? `/create?q=${encodeURIComponent(prompt.trim() || searchQuery)}`
+                        : "/create"
+                    }
+                  >
+                    Send a request
+                  </Link>
+                </Button>
+                {searchQuery ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="min-h-10"
+                    onClick={clearSearch}
+                  >
+                    Clear search
+                  </Button>
+                ) : null}
+              </div>
             </div>
           ) : (
             <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

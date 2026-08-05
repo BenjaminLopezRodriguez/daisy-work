@@ -268,7 +268,7 @@ function WorkerWorkDashboard() {
         ) : jobs.length === 0 ? (
           <EmptyState
             title="No open jobs"
-            description="Check back soon — custom jobs appear when customers post publicly."
+            description="Custom jobs appear here when customers post them publicly."
             action={
               <Button asChild variant="outline">
                 <Link href="/marketplace">Browse marketplace</Link>

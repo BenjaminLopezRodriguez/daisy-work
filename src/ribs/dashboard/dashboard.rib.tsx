@@ -43,7 +43,7 @@ export function DashboardView() {
             Hi, {first}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Describe what you need — Daisy matches services for you.
+            Describe what you need and Daisy finds matches.
           </p>
         </div>
 
@@ -97,7 +97,7 @@ export function DashboardView() {
         ) : active.length === 0 && drafts.length === 0 ? (
           <EmptyState
             title="No jobs yet"
-            description="Describe what you need above — Daisy will draft the post."
+            description="Describe what you need above and Daisy drafts the post."
           />
         ) : (
           <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">

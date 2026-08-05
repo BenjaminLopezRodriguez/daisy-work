@@ -9,7 +9,8 @@ export type ToolRisk =
 
 export const orchestratorInputSchema = z.object({
   message: z.string().min(1),
-  userId: z.string(),
+  /** Absent when previewing a plan before signing in. Planning never reads it. */
+  userId: z.string().nullable().optional(),
   workOrderId: z.string().optional(),
 });
 

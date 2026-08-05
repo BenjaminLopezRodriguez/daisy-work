@@ -296,6 +296,49 @@ export const orchestratorRouter = createTRPCRouter({
     .input(z.object({ query: z.string().trim().min(1).max(300) }))
     .mutation(async ({ input }) => parseSearchFilters(input.query)),
 
+  /**
+   * Plans a job without writing anything, so someone can see their draft
+   * before signing in. Persisting still requires an account — this only
+   * returns the plan. Input is capped because it reaches a paid model.
+   */
+  planPreview: publicProcedure
+    .input(z.object({ message: z.string().trim().min(1).max(2000) }))
+    .mutation(async ({ input }) => {
+      const model = createOrchestratorModel();
+      const result = await model.plan({ message: input.message, userId: null });
+      if (result.kind !== "work_draft") return result;
+      return {
+        kind: "work_draft" as const,
+        plan: result.plan,
+        explanation: result.explanation,
+      };
+    }),
+
+  /**
+   * Persists a plan the caller already previewed. Lets the sign-in step come
+   * last: draft first, account only when it is time to save.
+   */
+  createFromPlan: protectedProcedure
+    .input(z.object({ plan: workPlanSchema }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const services = createDbWorkOrderService();
+      const created = await createDraftFromPlan(
+        {
+          userId,
+          services: {
+            createDraft: (draftInput) => services.createDraft(draftInput),
+            publish: async (publishInput) => {
+              await services.publish(publishInput);
+            },
+          },
+        },
+        input.plan,
+        userId,
+      );
+      return { draftId: created.draftId };
+    }),
+
   planAndDraft: protectedProcedure
     .input(z.object({ message: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
