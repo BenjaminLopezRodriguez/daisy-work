@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useMemo,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 import Link from "next/link";
 
@@ -37,7 +32,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
 
   if (isError) {
     return (
-      <div className="flex min-h-dvh items-center justify-center p-6 text-sm text-muted-foreground">
+      <div className="text-muted-foreground flex min-h-dvh items-center justify-center p-6 text-sm">
         Couldn’t load your account. Try again in a moment.
       </div>
     );
@@ -47,10 +42,12 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
   if (!value) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 p-6 text-center">
-        <p className="text-sm text-muted-foreground">Sign in to see your jobs.</p>
+        <p className="text-muted-foreground text-sm">
+          Sign in to see your jobs.
+        </p>
         <Link
           href="/signin"
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+          className="bg-primary text-primary-foreground rounded-md px-4 py-2 text-sm font-medium"
         >
           Sign in
         </Link>

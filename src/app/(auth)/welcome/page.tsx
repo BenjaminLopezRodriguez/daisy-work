@@ -40,7 +40,7 @@ export default async function WelcomePage({
       <div className="w-full max-w-md space-y-6">
         <div className="space-y-1 text-center">
           <h1 className="text-xl font-medium">Welcome to Daisy.work</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             What brings you here? Workers get a work dashboard; customers get
             the marketplace to post and hire.
           </p>

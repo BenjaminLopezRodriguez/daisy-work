@@ -1,5 +1,12 @@
 import type { LucideIcon } from "lucide-react";
-import { Briefcase, Home, Package, Plus, Search, UserRound } from "lucide-react";
+import {
+  Briefcase,
+  Home,
+  Package,
+  Plus,
+  Search,
+  UserRound,
+} from "lucide-react";
 
 import type { OnboardingChoice } from "@/lib/daisy/role";
 import { isWorker } from "@/lib/daisy/role";
@@ -116,7 +123,9 @@ export const SIGNED_OUT_NAV: NavItem[] = [
   navItem(ROUTES.create),
 ];
 
-export function navForRole(choice: OnboardingChoice | null | undefined): NavItem[] {
+export function navForRole(
+  choice: OnboardingChoice | null | undefined,
+): NavItem[] {
   if (isWorker(choice)) return WORKER_NAV;
   if (choice === "hire") return CUSTOMER_NAV;
   return DEFAULT_NAV;

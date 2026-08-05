@@ -42,7 +42,11 @@ export const servicesRouter = createTRPCRouter({
   }),
 
   listActive: publicProcedure
-    .input(z.object({ limit: z.number().int().min(1).max(48).optional() }).optional())
+    .input(
+      z
+        .object({ limit: z.number().int().min(1).max(48).optional() })
+        .optional(),
+    )
     .query(async ({ input }) => listActiveServices(input?.limit ?? 24)),
 
   byId: publicProcedure
@@ -58,27 +62,29 @@ export const servicesRouter = createTRPCRouter({
     )
     .query(async ({ input }) => matchServices(input.query, input.limit ?? 8)),
 
-  upsert: protectedProcedure.input(serviceInput).mutation(async ({ ctx, input }) => {
-    const userId = ctx.session.user.id;
-    const profileId = await ensureWorkerProfileId(userId);
-    if (!profileId) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "Create a provider profile before listing a service",
+  upsert: protectedProcedure
+    .input(serviceInput)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const profileId = await ensureWorkerProfileId(userId);
+      if (!profileId) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Create a provider profile before listing a service",
+        });
+      }
+      return upsertServiceListing({
+        id: input.id,
+        ownerUserId: userId,
+        workerProfileId: profileId,
+        title: input.title,
+        description: input.description,
+        priceCents: input.priceCents,
+        coverImageUrl: input.coverImageUrl,
+        tags: input.tags,
+        status: input.status,
       });
-    }
-    return upsertServiceListing({
-      id: input.id,
-      ownerUserId: userId,
-      workerProfileId: profileId,
-      title: input.title,
-      description: input.description,
-      priceCents: input.priceCents,
-      coverImageUrl: input.coverImageUrl,
-      tags: input.tags,
-      status: input.status,
-    });
-  }),
+    }),
 
   recordView: publicProcedure
     .input(z.object({ id: z.string().uuid() }))

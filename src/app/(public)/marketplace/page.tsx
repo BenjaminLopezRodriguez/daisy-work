@@ -173,7 +173,7 @@ function CategoryRail({
     <div
       role="tablist"
       aria-label="Filter by category"
-      className="-mx-1 flex gap-rail-gap overflow-x-auto px-1 pb-1"
+      className="gap-rail-gap -mx-1 flex overflow-x-auto px-1 pb-1"
       onKeyDown={(e) => {
         const step: Record<string, number | undefined> = {
           ArrowRight: focusIdx + 1,
@@ -200,17 +200,15 @@ function CategoryRail({
             role="tab"
             aria-selected={selected}
             aria-controls={controls}
-            aria-label={
-              isAll ? "All categories" : `${c.name}, ${c.count} jobs`
-            }
+            aria-label={isAll ? "All categories" : `${c.name}, ${c.count} jobs`}
             tabIndex={focusIdx === i ? 0 : -1}
             onFocus={() => setFocusIdx(i)}
             onClick={() => onSelect(selected || isAll ? undefined : c.name)}
             className={cn(
-              "min-h-11 shrink-0 rounded-nav-pill border px-3 text-chip whitespace-nowrap outline-none transition-colors",
-              "focus-visible:ring-2 focus-visible:ring-nav-focus focus-visible:ring-offset-2",
+              "rounded-nav-pill text-chip min-h-11 shrink-0 border px-3 whitespace-nowrap transition-colors outline-none",
+              "focus-visible:ring-nav-focus focus-visible:ring-2 focus-visible:ring-offset-2",
               selected
-                ? "border-transparent bg-nav-accent text-nav-accent-ink"
+                ? "bg-nav-accent text-nav-accent-ink border-transparent"
                 : "border-nav-hairline text-nav-ink-muted hover:text-nav-ink",
             )}
           >
@@ -254,7 +252,7 @@ function FilterGroups({
         name={name}
         checked={checked}
         onChange={onPick}
-        className="size-4 accent-nav-active focus-visible:ring-2 focus-visible:ring-nav-focus focus-visible:ring-offset-2"
+        className="accent-nav-active focus-visible:ring-nav-focus size-4 focus-visible:ring-2 focus-visible:ring-offset-2"
       />
       {label}
     </label>
@@ -263,8 +261,8 @@ function FilterGroups({
   return (
     <div className="space-y-4">
       {jobs && showCategory && categories.length > 0 ? (
-        <fieldset className="border-b border-nav-hairline pb-4">
-          <legend className="text-xs font-medium text-nav-ink-muted">
+        <fieldset className="border-nav-hairline border-b pb-4">
+          <legend className="text-nav-ink-muted text-xs font-medium">
             Category
           </legend>
           {radio("cat", "__all__", !cat, "All", () =>
@@ -278,8 +276,8 @@ function FilterGroups({
         </fieldset>
       ) : null}
 
-      <fieldset className="space-y-2 border-b border-nav-hairline pb-4">
-        <legend className="text-xs font-medium text-nav-ink-muted">
+      <fieldset className="border-nav-hairline space-y-2 border-b pb-4">
+        <legend className="text-nav-ink-muted text-xs font-medium">
           Budget
         </legend>
         <div className="flex items-center gap-2">
@@ -312,8 +310,8 @@ function FilterGroups({
       </fieldset>
 
       {jobs ? (
-        <fieldset className="border-b border-nav-hairline pb-4">
-          <legend className="text-xs font-medium text-nav-ink-muted">
+        <fieldset className="border-nav-hairline border-b pb-4">
+          <legend className="text-nav-ink-muted text-xs font-medium">
             Work mode
           </legend>
           {radio("mode", "__any__", !mode, "Any", () =>
@@ -328,7 +326,7 @@ function FilterGroups({
       ) : null}
 
       <fieldset>
-        <legend className="text-xs font-medium text-nav-ink-muted">Sort</legend>
+        <legend className="text-nav-ink-muted text-xs font-medium">Sort</legend>
         {(
           [
             ["recent", "Most recent"],
@@ -354,15 +352,22 @@ function MarketplaceBrowse() {
   const { scope, q, cat, mode, min, max, sort, write } = state;
   const [sheetOpen, setSheetOpen] = useState(false);
   /** What the last parse inferred, so it can be shown and undone (§task 2). */
-  const [inferred, setInferred] = useState<{ raw: string; keys: string[] } | null>(
-    null,
-  );
+  const [inferred, setInferred] = useState<{
+    raw: string;
+    keys: string[];
+  } | null>(null);
 
   const parse = api.orchestrator.parseSearchFilters.useMutation();
 
   const runSearch = async (rawInput: string) => {
     const raw = rawInput.trim();
-    const reset = { cat: undefined, mode: undefined, min: undefined, max: undefined, sort: undefined };
+    const reset = {
+      cat: undefined,
+      mode: undefined,
+      min: undefined,
+      max: undefined,
+      sort: undefined,
+    };
     if (!raw) {
       setInferred(null);
       write({ q: undefined, ...reset });
@@ -406,15 +411,15 @@ function MarketplaceBrowse() {
     });
   };
 
-  const { data: allJobs = [], isLoading: jobsLoading } = api.work.browse.useQuery(
-    q ? { q } : undefined,
-  );
+  const { data: allJobs = [], isLoading: jobsLoading } =
+    api.work.browse.useQuery(q ? { q } : undefined);
   const { data: services = [], isLoading: servicesLoading } =
     api.services.listActive.useQuery({ limit: 24 });
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const j of allJobs) counts.set(j.category, (counts.get(j.category) ?? 0) + 1);
+    for (const j of allJobs)
+      counts.set(j.category, (counts.get(j.category) ?? 0) + 1);
     return [...counts.entries()]
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
@@ -429,7 +434,12 @@ function MarketplaceBrowse() {
         (min === undefined || j.budgetAmount >= min) &&
         (max === undefined || j.budgetAmount <= max),
     );
-    return sortItems(list, sort, (j) => j.budgetAmount, (j) => j.createdAt);
+    return sortItems(
+      list,
+      sort,
+      (j) => j.budgetAmount,
+      (j) => j.createdAt,
+    );
   }, [allJobs, cat, mode, min, max, sort]);
 
   const filteredServices = useMemo(() => {
@@ -444,13 +454,24 @@ function MarketplaceBrowse() {
         (min === undefined || s.priceCents >= min) &&
         (max === undefined || s.priceCents <= max),
     );
-    return sortItems(list, sort, (s) => s.priceCents, (s) => s.createdAt);
+    return sortItems(
+      list,
+      sort,
+      (s) => s.priceCents,
+      (s) => s.createdAt,
+    );
   }, [services, q, min, max, sort]);
 
   const activeFilters = [
-    cat ? { key: "cat", label: cat, clear: () => write({ cat: undefined }) } : null,
+    cat
+      ? { key: "cat", label: cat, clear: () => write({ cat: undefined }) }
+      : null,
     mode
-      ? { key: "mode", label: MODE_LABEL[mode]!, clear: () => write({ mode: undefined }) }
+      ? {
+          key: "mode",
+          label: MODE_LABEL[mode]!,
+          clear: () => write({ mode: undefined }),
+        }
       : null,
     min !== undefined
       ? {
@@ -476,9 +497,16 @@ function MarketplaceBrowse() {
   ].filter((x): x is NonNullable<typeof x> => x !== null);
 
   const clearAll = () =>
-    write({ cat: undefined, mode: undefined, min: undefined, max: undefined, sort: undefined });
+    write({
+      cat: undefined,
+      mode: undefined,
+      min: undefined,
+      max: undefined,
+      sort: undefined,
+    });
 
-  const resultCount = scope === "services" ? filteredServices.length : jobs.length;
+  const resultCount =
+    scope === "services" ? filteredServices.length : jobs.length;
 
   // Only chips still present in the URL count as inferred.
   const activeKeys = new Set(activeFilters.map((f) => f.key));
@@ -516,7 +544,7 @@ function MarketplaceBrowse() {
           placeholder={
             scope === "services" ? "Search services…" : "Search open jobs…"
           }
-          className="h-11 text-search"
+          className="text-search h-11"
           aria-label="Search the marketplace"
         />
         <Button
@@ -532,7 +560,7 @@ function MarketplaceBrowse() {
       <div
         role="tablist"
         aria-label="Search scope"
-        className="flex gap-2 border-b border-nav-hairline pb-px"
+        className="border-nav-hairline flex gap-2 border-b pb-px"
       >
         {(
           [
@@ -548,16 +576,20 @@ function MarketplaceBrowse() {
             aria-controls={RESULTS_ID}
             onClick={() =>
               write(
-                { scope: id === "services" ? undefined : id, cat: undefined, mode: undefined },
+                {
+                  scope: id === "services" ? undefined : id,
+                  cat: undefined,
+                  mode: undefined,
+                },
                 "push",
               )
             }
             className={cn(
-              "min-h-11 border-b-2 px-3 text-sm font-medium outline-none transition-colors",
-              "focus-visible:ring-2 focus-visible:ring-nav-focus focus-visible:ring-offset-2",
+              "min-h-11 border-b-2 px-3 text-sm font-medium transition-colors outline-none",
+              "focus-visible:ring-nav-focus focus-visible:ring-2 focus-visible:ring-offset-2",
               scope === id
                 ? "border-nav-active text-nav-ink"
-                : "border-transparent text-nav-ink-muted hover:text-nav-ink",
+                : "text-nav-ink-muted hover:text-nav-ink border-transparent",
             )}
           >
             {label}
@@ -589,7 +621,7 @@ function MarketplaceBrowse() {
               {activeFilters.length > 0 ? (
                 <span
                   aria-hidden
-                  className="absolute -top-1 -right-1 min-w-5 rounded-full bg-nav-accent px-1 text-xs leading-5 font-medium text-nav-accent-ink tabular-nums"
+                  className="bg-nav-accent text-nav-accent-ink absolute -top-1 -right-1 min-w-5 rounded-full px-1 text-xs leading-5 font-medium tabular-nums"
                 >
                   {activeFilters.length}
                 </span>
@@ -601,7 +633,11 @@ function MarketplaceBrowse() {
               <SheetTitle>Filters</SheetTitle>
             </SheetHeader>
             <div className="px-4">
-              <FilterGroups state={state} categories={categories} showCategory />
+              <FilterGroups
+                state={state}
+                categories={categories}
+                showCategory
+              />
             </div>
             <SheetFooter className="flex-row gap-2">
               <Button
@@ -635,14 +671,17 @@ function MarketplaceBrowse() {
               {activeFilters.length > 0 ? (
                 <span
                   aria-hidden
-                  className="absolute -top-1 -right-1 min-w-5 rounded-full bg-nav-accent px-1 text-xs leading-5 font-medium text-nav-accent-ink tabular-nums"
+                  className="bg-nav-accent text-nav-accent-ink absolute -top-1 -right-1 min-w-5 rounded-full px-1 text-xs leading-5 font-medium tabular-nums"
                 >
                   {activeFilters.length}
                 </span>
               ) : null}
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-80 max-h-[70dvh] overflow-y-auto">
+          <PopoverContent
+            align="start"
+            className="max-h-[70dvh] w-80 overflow-y-auto"
+          >
             <FilterGroups state={state} categories={categories} showCategory />
             <Button
               type="button"
@@ -663,7 +702,7 @@ function MarketplaceBrowse() {
             <Button
               type="button"
               variant="ghost"
-              className="min-h-11 text-chip"
+              className="text-chip min-h-11"
               onClick={undoInferred}
             >
               Undo these filters
@@ -680,9 +719,9 @@ function MarketplaceBrowse() {
               onClick={f.clear}
               aria-label={`Remove filter: ${f.label}${auto ? " (from your search)" : ""}`}
               className={cn(
-                "min-h-11 rounded-nav-pill px-3 text-chip text-nav-ink outline-none focus-visible:ring-2 focus-visible:ring-nav-focus focus-visible:ring-offset-2",
+                "rounded-nav-pill text-chip text-nav-ink focus-visible:ring-nav-focus min-h-11 px-3 outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
                 auto
-                  ? "border border-dashed border-nav-active bg-nav-active-wash"
+                  ? "border-nav-active bg-nav-active-wash border border-dashed"
                   : "bg-nav-active-wash",
               )}
             >
@@ -731,16 +770,16 @@ function MarketplaceBrowse() {
                 }
               />
             ) : (
-              <ul className="grid gap-grid-gutter sm:grid-cols-2 xl:grid-cols-3">
+              <ul className="gap-grid-gutter grid sm:grid-cols-2 xl:grid-cols-3">
                 {filteredServices.map((s) => (
                   <li
                     key={s.id}
                     className={cn(
-                      "relative flex h-full flex-col overflow-hidden rounded-nav-card border border-border bg-card shadow-sm transition-colors",
-                      "hover:bg-muted/40 focus-within:ring-2 focus-within:ring-nav-focus focus-within:ring-offset-2",
+                      "rounded-nav-card border-border bg-card relative flex h-full flex-col overflow-hidden border shadow-sm transition-colors",
+                      "hover:bg-muted/40 focus-within:ring-nav-focus focus-within:ring-2 focus-within:ring-offset-2",
                     )}
                   >
-                    <div className="relative aspect-video w-full bg-muted">
+                    <div className="bg-muted relative aspect-video w-full">
                       {s.coverImageUrl ? (
                         <Image
                           src={s.coverImageUrl}
@@ -762,10 +801,10 @@ function MarketplaceBrowse() {
                         </Link>
                       </p>
                       {s.ownerName ? (
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           <Link
                             href={`/providers/${s.workerProfileId}`}
-                            className="relative z-10 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-nav-focus"
+                            className="focus-visible:ring-nav-focus relative z-10 outline-none hover:underline focus-visible:ring-2"
                           >
                             {s.ownerName}
                           </Link>
@@ -815,20 +854,20 @@ function MarketplaceBrowse() {
               }
             />
           ) : (
-            <ul className="grid gap-grid-gutter sm:grid-cols-2 xl:grid-cols-3">
+            <ul className="gap-grid-gutter grid sm:grid-cols-2 xl:grid-cols-3">
               {jobs.map((wo) => (
                 <li
                   key={wo.id}
                   className={cn(
-                    "relative flex h-full flex-col gap-3 rounded-nav-card border border-border bg-card p-4 shadow-sm transition-colors",
-                    "hover:bg-muted/40 focus-within:ring-2 focus-within:ring-nav-focus focus-within:ring-offset-2",
+                    "rounded-nav-card border-border bg-card relative flex h-full flex-col gap-3 border p-4 shadow-sm transition-colors",
+                    "hover:bg-muted/40 focus-within:ring-nav-focus focus-within:ring-2 focus-within:ring-offset-2",
                   )}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                       {wo.category}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       {formatDistanceToNow(wo.createdAt, { addSuffix: true })}
                     </span>
                   </div>
@@ -841,12 +880,12 @@ function MarketplaceBrowse() {
                         {wo.title}
                       </Link>
                     </h3>
-                    <p className="line-clamp-3 text-xs text-muted-foreground">
+                    <p className="text-muted-foreground line-clamp-3 text-xs">
                       {wo.description}
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                    <span className="font-semibold tabular-nums text-foreground">
+                  <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                    <span className="text-foreground font-semibold tabular-nums">
                       {priceLabel(wo)}
                     </span>
                     <span aria-hidden>·</span>
@@ -872,9 +911,9 @@ function MarketplaceBrowse() {
 
 function ResultsSkeleton() {
   return (
-    <div className="grid gap-grid-gutter sm:grid-cols-2 xl:grid-cols-3">
+    <div className="gap-grid-gutter grid sm:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <Skeleton key={i} className="h-40 rounded-nav-card" />
+        <Skeleton key={i} className="rounded-nav-card h-40" />
       ))}
     </div>
   );

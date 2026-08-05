@@ -19,7 +19,7 @@ export default async function ProviderOnboardingPage() {
         <h1 className="text-xl font-medium">
           {profile ? "Edit your profile" : "Set up your provider profile"}
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           This is what people see when you apply to their job. You can change it
           any time.
         </p>

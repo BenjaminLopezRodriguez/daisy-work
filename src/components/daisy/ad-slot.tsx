@@ -50,7 +50,7 @@ export function AdSlot({
 
   return (
     <section className={cn("space-y-3", className)} aria-label={title}>
-      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+      <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
         {title}
       </p>
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -60,18 +60,16 @@ export function AdSlot({
               href={ad.ctaUrl}
               target={ad.ctaUrl.startsWith("http") ? "_blank" : undefined}
               rel={
-                ad.ctaUrl.startsWith("http")
-                  ? "noopener noreferrer"
-                  : undefined
+                ad.ctaUrl.startsWith("http") ? "noopener noreferrer" : undefined
               }
               onClick={() => recordClick.mutate({ id: ad.id })}
               className={cn(
-                "flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm outline-none transition-colors",
-                "hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring",
+                "border-border bg-card flex h-full flex-col overflow-hidden rounded-xl border shadow-sm transition-colors outline-none",
+                "hover:bg-muted/40 focus-visible:ring-ring focus-visible:ring-2",
               )}
             >
               {ad.imageUrl ? (
-                <div className="relative aspect-video w-full bg-muted">
+                <div className="bg-muted relative aspect-video w-full">
                   <Image
                     src={ad.imageUrl}
                     alt=""
@@ -83,22 +81,22 @@ export function AdSlot({
               ) : null}
               <div className="flex flex-1 flex-col gap-2 p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                  <span className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
                     {ad.advertiserType === "company"
                       ? (ad.companyName ?? "Partner")
                       : "Worker promo"}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">Ad</span>
+                  <span className="text-muted-foreground text-[10px]">Ad</span>
                 </div>
                 <h3 className="text-sm font-semibold tracking-tight">
                   {ad.headline}
                 </h3>
                 {ad.body ? (
-                  <p className="line-clamp-2 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground line-clamp-2 text-xs">
                     {ad.body}
                   </p>
                 ) : null}
-                <span className="mt-auto text-xs font-medium text-primary">
+                <span className="text-primary mt-auto text-xs font-medium">
                   {ad.ctaLabel} →
                 </span>
               </div>

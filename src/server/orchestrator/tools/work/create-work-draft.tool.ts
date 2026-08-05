@@ -1,6 +1,9 @@
 import { z } from "zod";
 
-import type { OrchestratorTool, ToolExecutionContext } from "../../orchestrator.types";
+import type {
+  OrchestratorTool,
+  ToolExecutionContext,
+} from "../../orchestrator.types";
 import { workPlanSchema } from "../../orchestrator.types";
 
 const inputSchema = workPlanSchema.extend({

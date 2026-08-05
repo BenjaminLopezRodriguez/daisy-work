@@ -56,7 +56,10 @@ export async function chatJson<T>(args: {
     const parsed = args.schema.safeParse(JSON.parse(content));
     return parsed.success ? parsed.data : null;
   } catch (err) {
-    console.error("DeepSeek call errored", err instanceof Error ? err.message : "unknown");
+    console.error(
+      "DeepSeek call errored",
+      err instanceof Error ? err.message : "unknown",
+    );
     return null;
   }
 }

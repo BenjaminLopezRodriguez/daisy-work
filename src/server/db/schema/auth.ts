@@ -11,7 +11,10 @@ export const accounts = createTable(
       .uuid()
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    type: d.varchar({ length: 255 }).$type<"oauth" | "oidc" | "email" | "webauthn">().notNull(),
+    type: d
+      .varchar({ length: 255 })
+      .$type<"oauth" | "oidc" | "email" | "webauthn">()
+      .notNull(),
     provider: d.varchar({ length: 255 }).notNull(),
     providerAccountId: d.varchar({ length: 255 }).notNull(),
     refresh_token: d.text(),

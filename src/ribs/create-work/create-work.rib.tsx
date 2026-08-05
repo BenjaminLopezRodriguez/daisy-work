@@ -62,9 +62,7 @@ export function CreateWorkView({ signedIn }: { signedIn: boolean }) {
   const utils = api.useUtils();
 
   const matchQuery =
-    plan != null
-      ? `${plan.title} ${plan.summary} ${plan.category}`
-      : message;
+    plan != null ? `${plan.title} ${plan.summary} ${plan.category}` : message;
 
   const { data: matches = [], isFetching: matching } =
     api.services.match.useQuery(
@@ -174,10 +172,9 @@ export function CreateWorkView({ signedIn }: { signedIn: boolean }) {
       toast.success("Request sent", { id: toastId });
       void utils.work.list.invalidate();
     } catch (e) {
-      toast.error(
-        e instanceof Error ? e.message : "Request failed",
-        { id: toastId },
-      );
+      toast.error(e instanceof Error ? e.message : "Request failed", {
+        id: toastId,
+      });
     }
   };
 
@@ -267,7 +264,7 @@ export function CreateWorkView({ signedIn }: { signedIn: boolean }) {
             />
           </FormField>
           {preselectedService || preselectedProvider ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               You’ll request a specific provider after Daisy drafts your brief.
             </p>
           ) : null}
@@ -284,7 +281,7 @@ export function CreateWorkView({ signedIn }: { signedIn: boolean }) {
 
       {stage === 1 && plan ? (
         <section className="space-y-6">
-          <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+          <div className="border-border bg-card space-y-4 rounded-xl border p-4">
             <FormField id="title" label="Title">
               <Input
                 id="title"
@@ -300,9 +297,9 @@ export function CreateWorkView({ signedIn }: { signedIn: boolean }) {
                 rows={3}
               />
             </FormField>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Budget{" "}
-              <span className="font-medium text-foreground tabular-nums">
+              <span className="text-foreground font-medium tabular-nums">
                 {formatMoney(plan.budgetAmount, plan.currency)}
               </span>{" "}
               · {plan.workMode.replaceAll("_", " ")}
@@ -310,21 +307,23 @@ export function CreateWorkView({ signedIn }: { signedIn: boolean }) {
           </div>
 
           {!signedIn ? (
-            <p className="text-xs text-muted-foreground" role="status" aria-live="polite">
-              {busy
-                ? "Working…"
-                : "Not saved yet. You sign in when you post."}
+            <p
+              className="text-muted-foreground text-xs"
+              role="status"
+              aria-live="polite"
+            >
+              {busy ? "Working…" : "Not saved yet. You sign in when you post."}
             </p>
           ) : null}
 
           <div className="space-y-3">
             <h2 className="text-sm font-medium">Matched services</h2>
             {matching ? (
-              <p className="text-sm text-muted-foreground">Matching…</p>
+              <p className="text-muted-foreground text-sm">Matching…</p>
             ) : matches.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No packaged services matched yet. Post an open job so workers can
-                apply.
+              <p className="text-muted-foreground text-sm">
+                No packaged services matched yet. Post an open job so workers
+                can apply.
               </p>
             ) : (
               <ul className="grid gap-3 sm:grid-cols-2">
@@ -335,11 +334,11 @@ export function CreateWorkView({ signedIn }: { signedIn: boolean }) {
                       disabled={busy}
                       onClick={() => void requestService(s.id)}
                       className={cn(
-                        "flex w-full flex-col overflow-hidden rounded-xl border border-border bg-card text-left shadow-sm transition-colors",
-                        "hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring",
+                        "border-border bg-card flex w-full flex-col overflow-hidden rounded-xl border text-left shadow-sm transition-colors",
+                        "hover:bg-muted/40 focus-visible:ring-ring focus-visible:ring-2",
                       )}
                     >
-                      <div className="relative aspect-video w-full bg-muted">
+                      <div className="bg-muted relative aspect-video w-full">
                         {s.coverImageUrl ? (
                           <Image
                             src={s.coverImageUrl}
@@ -352,7 +351,7 @@ export function CreateWorkView({ signedIn }: { signedIn: boolean }) {
                       </div>
                       <div className="space-y-1 p-3">
                         <p className="text-sm font-semibold">{s.title}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           {s.ownerName}
                         </p>
                         <p className="text-xs font-medium tabular-nums">
@@ -366,7 +365,7 @@ export function CreateWorkView({ signedIn }: { signedIn: boolean }) {
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2 border-t border-border pt-4">
+          <div className="border-border flex flex-wrap gap-2 border-t pt-4">
             <Button
               type="button"
               variant="outline"
@@ -388,11 +387,11 @@ export function CreateWorkView({ signedIn }: { signedIn: boolean }) {
       ) : null}
 
       {stage === 2 && doneId ? (
-        <section className="space-y-4 rounded-xl border border-border bg-card p-5">
+        <section className="border-border bg-card space-y-4 rounded-xl border p-5">
           <h2 className="text-lg font-semibold">
             {doneKind === "request" ? "Request sent" : "Your job is live"}
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {doneKind === "request"
               ? "The provider was assigned. Track it under Requests."
               : "Workers can find it on the marketplace. Track it under Requests."}
@@ -405,7 +404,12 @@ export function CreateWorkView({ signedIn }: { signedIn: boolean }) {
             >
               Open
             </Button>
-            <Button asChild type="button" variant="outline" className="min-h-11">
+            <Button
+              asChild
+              type="button"
+              variant="outline"
+              className="min-h-11"
+            >
               <Link href="/work">Requests</Link>
             </Button>
           </div>
@@ -434,7 +438,11 @@ export function CreateWorkView({ signedIn }: { signedIn: boolean }) {
               disabled={busy}
               onClick={() => void publishOpenJob()}
             >
-              {busy ? "Posting…" : signedIn ? "Post publicly" : "Sign in & post"}
+              {busy
+                ? "Posting…"
+                : signedIn
+                  ? "Post publicly"
+                  : "Sign in & post"}
             </Button>
           </DialogFooter>
         </DialogContent>

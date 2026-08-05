@@ -15,7 +15,10 @@ export type UploadedDoc = {
 };
 
 function isImageUrl(url: string, name: string) {
-  return /\.(png|jpe?g|gif|webp|avif)$/i.test(name) || /\.(png|jpe?g|gif|webp|avif)(\?|$)/i.test(url);
+  return (
+    /\.(png|jpe?g|gif|webp|avif)$/i.test(name) ||
+    /\.(png|jpe?g|gif|webp|avif)(\?|$)/i.test(url)
+  );
 }
 
 export function DocumentUpload({
@@ -38,7 +41,7 @@ export function DocumentUpload({
     <div className={cn("space-y-3", className)}>
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-medium">{label}</p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           {value.length}/{maxFiles}
         </p>
       </div>
@@ -48,10 +51,10 @@ export function DocumentUpload({
           {value.map((doc) => (
             <li
               key={doc.url}
-              className="flex items-center gap-2 rounded-lg border border-border bg-card p-2"
+              className="border-border bg-card flex items-center gap-2 rounded-lg border p-2"
             >
               {isImageUrl(doc.url, doc.name) ? (
-                <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-muted">
+                <div className="bg-muted relative size-12 shrink-0 overflow-hidden rounded-md">
                   <Image
                     src={doc.url}
                     alt={doc.name}
@@ -61,8 +64,8 @@ export function DocumentUpload({
                   />
                 </div>
               ) : (
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-md bg-muted">
-                  <FileText className="size-5 text-muted-foreground" />
+                <div className="bg-muted flex size-12 shrink-0 items-center justify-center rounded-md">
+                  <FileText className="text-muted-foreground size-5" />
                 </div>
               )}
               <div className="min-w-0 flex-1">
@@ -71,7 +74,7 @@ export function DocumentUpload({
                   href={doc.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-primary hover:underline"
+                  className="text-primary text-xs hover:underline"
                 >
                   Open
                 </a>
@@ -81,9 +84,7 @@ export function DocumentUpload({
                 size="icon-sm"
                 variant="ghost"
                 aria-label={`Remove ${doc.name}`}
-                onClick={() =>
-                  onChange(value.filter((d) => d.url !== doc.url))
-                }
+                onClick={() => onChange(value.filter((d) => d.url !== doc.url))}
               >
                 <X className="size-4" />
               </Button>
@@ -114,7 +115,7 @@ export function DocumentUpload({
       ) : null}
 
       {error ? (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-destructive text-sm">
           {error}
         </p>
       ) : null}

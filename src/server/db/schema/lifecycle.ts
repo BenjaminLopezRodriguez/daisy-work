@@ -1,4 +1,4 @@
-import { index } from "drizzle-orm/pg-core";
+import { index, uniqueIndex } from "drizzle-orm/pg-core";
 
 import { createTable } from "./_base";
 import {
@@ -167,6 +167,9 @@ export const reviews = createTable(
   (t) => [
     index("review_wo_idx").on(t.workOrderId),
     index("review_subject_idx").on(t.subjectId),
+    // One review per person per job — the DB, not the router, is what makes
+    // "you already reviewed this" true under a double-submit.
+    uniqueIndex("review_wo_reviewer_uq").on(t.workOrderId, t.reviewerId),
   ],
 );
 

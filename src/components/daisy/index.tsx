@@ -7,6 +7,8 @@ export { FormField, StepProgress } from "./ux";
 
 export { AppPage, PageHeader } from "./layout/primitives";
 
+export { ShareRow } from "./share-row";
+
 export function EmptyState({
   title,
   description,
@@ -17,10 +19,10 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border bg-card px-5 py-8 shadow-sm">
+    <div className="border-border bg-card flex flex-col items-start gap-3 rounded-xl border border-dashed px-5 py-8 shadow-sm">
       <div className="space-y-1">
         <h3 className="text-base font-semibold">{title}</h3>
-        <p className="max-w-md text-sm text-muted-foreground text-pretty">
+        <p className="text-muted-foreground max-w-md text-sm text-pretty">
           {description}
         </p>
       </div>

@@ -108,11 +108,7 @@ export const submissionStatusEnum = pgEnum("submission_status", [
   "disputed",
 ]);
 
-export const actorTypeEnum = pgEnum("actor_type", [
-  "human",
-  "agent",
-  "system",
-]);
+export const actorTypeEnum = pgEnum("actor_type", ["human", "agent", "system"]);
 
 export const milestoneStatusEnum = pgEnum("milestone_status", [
   "pending",

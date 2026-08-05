@@ -22,9 +22,7 @@ export const advertisements = createTable(
     id: d.uuid().primaryKey().defaultRandom(),
     advertiserType: adAdvertiserTypeEnum("advertiser_type").notNull(),
     /** Set for worker promos; optional for company ads. */
-    ownerUserId: d
-      .uuid()
-      .references(() => users.id, { onDelete: "set null" }),
+    ownerUserId: d.uuid().references(() => users.id, { onDelete: "set null" }),
     companyName: d.varchar({ length: 256 }),
     headline: d.varchar({ length: 128 }).notNull(),
     body: d.text().notNull().default(""),

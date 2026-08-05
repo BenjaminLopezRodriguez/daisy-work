@@ -91,7 +91,10 @@ export function workerPayout(amount: MoneyMinor): MoneyMinor {
   return amount - platformFee(amount);
 }
 
-export function formatDateTime(value: Date | string | null, locale = "en-US"): string {
+export function formatDateTime(
+  value: Date | string | null,
+  locale = "en-US",
+): string {
   if (!value) return "—";
   const date = value instanceof Date ? value : new Date(value);
   return new Intl.DateTimeFormat(locale, {

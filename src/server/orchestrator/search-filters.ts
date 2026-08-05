@@ -52,9 +52,8 @@ export function heuristicFilters(query: string): SearchFilters {
 
   // "under $500" / "over 200" → cents.
   const under = /\b(?:under|below|less than|max)\s*\$?\s*(\d[\d,]*)/.exec(text);
-  const over = /\b(?:over|above|more than|min|at least)\s*\$?\s*(\d[\d,]*)/.exec(
-    text,
-  );
+  const over =
+    /\b(?:over|above|more than|min|at least)\s*\$?\s*(\d[\d,]*)/.exec(text);
   if (under?.[1]) filters.max = Number(under[1].replace(/,/g, "")) * 100;
   if (over?.[1]) filters.min = Number(over[1].replace(/,/g, "")) * 100;
 
@@ -80,10 +79,15 @@ export async function parseSearchFilters(
     schema: searchFiltersSchema,
   });
 
-  if (!parsed) return { filters: heuristicFilters(trimmed), source: "heuristic" };
+  if (!parsed)
+    return { filters: heuristicFilters(trimmed), source: "heuristic" };
 
   // A min above max is nonsense; drop both rather than return an empty result set.
-  if (parsed.min !== undefined && parsed.max !== undefined && parsed.min > parsed.max) {
+  if (
+    parsed.min !== undefined &&
+    parsed.max !== undefined &&
+    parsed.min > parsed.max
+  ) {
     delete parsed.min;
     delete parsed.max;
   }

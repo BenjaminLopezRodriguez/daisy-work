@@ -25,7 +25,7 @@ type AiField = "title" | "description" | "price" | "tags";
 
 function AiMark() {
   return (
-    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+    <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase">
       From Daisy · review
     </span>
   );
@@ -191,7 +191,7 @@ export default function ServicesPage() {
 
       {formOpen && hasProfile ? (
         <form
-          className="space-y-4 rounded-xl border border-border bg-card p-4"
+          className="border-border bg-card space-y-4 rounded-xl border p-4"
           onSubmit={(e) => {
             e.preventDefault();
             if (!canSubmit) return;
@@ -210,7 +210,7 @@ export default function ServicesPage() {
             });
           }}
         >
-          <div className="space-y-2 rounded-lg border border-dashed border-border p-3">
+          <div className="border-border space-y-2 rounded-lg border border-dashed p-3">
             <Label htmlFor="hint">
               Describe what you do and Daisy drafts the listing
             </Label>
@@ -240,11 +240,15 @@ export default function ServicesPage() {
                 {suggest.isPending ? "Drafting…" : "Draft with Daisy"}
               </Button>
             </div>
-            <p id="hint-help" className="text-xs text-muted-foreground">
-              Fills only the fields you left empty. Nothing is saved
-              until you publish.
+            <p id="hint-help" className="text-muted-foreground text-xs">
+              Fills only the fields you left empty. Nothing is saved until you
+              publish.
             </p>
-            <p role="status" aria-live="polite" className="text-xs text-muted-foreground">
+            <p
+              role="status"
+              aria-live="polite"
+              className="text-muted-foreground text-xs"
+            >
               {draftNote}
             </p>
           </div>
@@ -306,7 +310,7 @@ export default function ServicesPage() {
                 aria-describedby={aiFilled.price ? "price-basis" : undefined}
               />
               {aiFilled.price ? (
-                <p id="price-basis" className="text-xs text-muted-foreground">
+                <p id="price-basis" className="text-muted-foreground text-xs">
                   {priceBasis
                     ? `Median of ${priceBasis.sampleSize} similar listing${
                         priceBasis.sampleSize === 1 ? "" : "s"
@@ -332,7 +336,7 @@ export default function ServicesPage() {
             </div>
           </div>
           {upsert.error ? (
-            <p className="text-sm text-destructive">{upsert.error.message}</p>
+            <p className="text-destructive text-sm">{upsert.error.message}</p>
           ) : null}
           <div className="flex gap-2">
             <Button type="submit" disabled={!canSubmit} className="min-h-11">
@@ -373,10 +377,10 @@ export default function ServicesPage() {
           {mine.map((s) => (
             <li
               key={s.id}
-              className="overflow-hidden rounded-xl border border-border bg-card"
+              className="border-border bg-card overflow-hidden rounded-xl border"
             >
               {s.coverImageUrl ? (
-                <div className="relative aspect-video w-full bg-muted">
+                <div className="bg-muted relative aspect-video w-full">
                   <Image
                     src={s.coverImageUrl}
                     alt=""
@@ -389,7 +393,7 @@ export default function ServicesPage() {
               <div className="flex items-start justify-between gap-3 p-4">
                 <div className="min-w-0">
                   <p className="font-medium">{s.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     {formatMoney(s.priceCents, "USD")} · {s.viewCount} views ·{" "}
                     {s.clickCount} requests · {s.status}
                   </p>

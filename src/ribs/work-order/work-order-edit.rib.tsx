@@ -19,7 +19,11 @@ import { api } from "@/trpc/react";
 
 export function WorkOrderEditScreen({ workOrderId }: { workOrderId: string }) {
   const router = useRouter();
-  const { data: wo, isLoading, isError } = api.work.byId.useQuery({
+  const {
+    data: wo,
+    isLoading,
+    isError,
+  } = api.work.byId.useQuery({
     id: workOrderId,
   });
   const me = api.me.get.useQuery();
@@ -106,7 +110,7 @@ export function WorkOrderEditScreen({ workOrderId }: { workOrderId: string }) {
       />
 
       <form
-        className="space-y-4 rounded-xl border border-border bg-card p-4"
+        className="border-border bg-card space-y-4 rounded-xl border p-4"
         onSubmit={(e) => {
           e.preventDefault();
           if (!canSave) return;
@@ -162,7 +166,7 @@ export function WorkOrderEditScreen({ workOrderId }: { workOrderId: string }) {
         </div>
 
         {update.error ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-destructive text-sm">
             {update.error.message}
           </p>
         ) : null}
@@ -178,7 +182,7 @@ export function WorkOrderEditScreen({ workOrderId }: { workOrderId: string }) {
             <Button
               type="button"
               variant="ghost"
-              className="min-h-11 text-destructive"
+              className="text-destructive min-h-11"
               disabled={cancel.isPending}
               onClick={() => {
                 if (confirm("Cancel this job posting?")) {

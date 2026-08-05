@@ -17,9 +17,9 @@ describe("MockOrchestratorModel", () => {
     });
     expect(plan.kind).toBe("work_draft");
     if (plan.kind !== "work_draft") return;
-    expect(plan.plan.plainRequirements.some((r: string) => /licensed/i.test(r))).toBe(
-      true,
-    );
+    expect(
+      plan.plan.plainRequirements.some((r: string) => /licensed/i.test(r)),
+    ).toBe(true);
     expect(plan.plan.needsConfirmation).toBe(true);
   });
 

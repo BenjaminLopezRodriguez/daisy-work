@@ -38,4 +38,3 @@ export type WorkOrderService = {
   listForUser: (userId: string) => Promise<WorkOrder[]>;
   listPublished: () => Promise<WorkOrder[]>;
 };
-

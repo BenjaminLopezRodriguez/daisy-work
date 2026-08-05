@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, avg, count, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import {
@@ -7,7 +7,7 @@ import {
   publicProcedure,
 } from "@/server/api/trpc";
 import { db } from "@/server/db";
-import { users, workerProfiles } from "@/server/db/schema";
+import { reviews, users, workerProfiles, workOrders } from "@/server/db/schema";
 
 const workModeValues = ["remote", "local", "on_site", "hybrid"] as const;
 
@@ -59,7 +59,11 @@ export const providerRouter = createTRPCRouter({
 
   /** Public marketplace directory of providers. */
   listPublic: publicProcedure
-    .input(z.object({ limit: z.number().int().min(1).max(48).optional() }).optional())
+    .input(
+      z
+        .object({ limit: z.number().int().min(1).max(48).optional() })
+        .optional(),
+    )
     .query(async ({ input }) => {
       const rows = await db
         .select({
@@ -122,6 +126,42 @@ export const providerRouter = createTRPCRouter({
       return {
         ...row,
         avatar: row.avatar ?? row.image,
+      };
+    }),
+
+  /**
+   * The numbers a stranger needs before handing over money. Cheap aggregates,
+   * no new tables — everything here is already recorded somewhere.
+   */
+  trustStats: publicProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const [completed] = await db
+        .select({ value: count() })
+        .from(workOrders)
+        .where(
+          and(
+            eq(workOrders.assigneeId, input.userId),
+            eq(workOrders.status, "approved"),
+          ),
+        );
+
+      const [rating] = await db
+        .select({ average: avg(reviews.rating), total: count() })
+        .from(reviews)
+        .where(eq(reviews.subjectId, input.userId));
+
+      const [user] = await db
+        .select({ memberSince: users.createdAt })
+        .from(users)
+        .where(eq(users.id, input.userId))
+        .limit(1);
+
+      return {
+        completedJobs: completed?.value ?? 0,
+        rating: rating?.average ? Number(rating.average) : null,
+        reviewCount: rating?.total ?? 0,
+        memberSince: user?.memberSince ?? null,
       };
     }),
 

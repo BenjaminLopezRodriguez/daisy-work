@@ -39,34 +39,30 @@ export function FormField({
       <Label htmlFor={id} className="text-sm font-medium">
         {label}
         {required ? (
-          <span className="ml-1 text-destructive" aria-hidden>
+          <span className="text-destructive ml-1" aria-hidden>
             *
           </span>
         ) : null}
         {optional ? (
-          <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+          <span className="text-muted-foreground ml-1.5 text-xs font-normal">
             Optional
           </span>
         ) : null}
         {required ? <span className="sr-only"> (required)</span> : null}
       </Label>
       <div
-        className="[&_input]:min-h-11 [&_textarea]:min-h-[7.5rem] [&_[data-slot=select-trigger]]:min-h-11 [&_[data-slot=select-trigger]]:w-full"
+        className="[&_[data-slot=select-trigger]]:min-h-11 [&_[data-slot=select-trigger]]:w-full [&_input]:min-h-11 [&_textarea]:min-h-[7.5rem]"
         {...(describedBy ? { "data-describedby": describedBy } : {})}
       >
         {children}
       </div>
       {helper && !error ? (
-        <p id={`${id}-helper`} className="text-sm text-muted-foreground">
+        <p id={`${id}-helper`} className="text-muted-foreground text-sm">
           {helper}
         </p>
       ) : null}
       {error ? (
-        <p
-          id={`${id}-error`}
-          role="alert"
-          className="text-sm text-destructive"
-        >
+        <p id={`${id}-error`} role="alert" className="text-destructive text-sm">
           {error}
         </p>
       ) : null}
@@ -91,7 +87,7 @@ export function StepProgress({
           Step {currentIndex + 1} of {steps.length}
           <span className="text-muted-foreground"> · {currentLabel}</span>
         </p>
-        <p className="tabular-nums text-muted-foreground">{pct}%</p>
+        <p className="text-muted-foreground tabular-nums">{pct}%</p>
       </div>
 
       <Progress value={pct} className="h-2" aria-label={`Progress ${pct}%`} />
@@ -108,8 +104,8 @@ export function StepProgress({
             >
               <span
                 className={cn(
-                  "flex size-8 items-center justify-center rounded-full text-xs font-semibold tabular-nums ring-2 ring-background transition-[background-color,color,transform] duration-200 ease-out",
-                  current && "scale-105 bg-primary text-primary-foreground",
+                  "ring-background flex size-8 items-center justify-center rounded-full text-xs font-semibold tabular-nums ring-2 transition-[background-color,color,transform] duration-200 ease-out",
+                  current && "bg-primary text-primary-foreground scale-105",
                   done && !current && "bg-primary/15 text-primary",
                   !current && !done && "bg-muted text-muted-foreground",
                 )}
@@ -124,7 +120,7 @@ export function StepProgress({
                 className={cn(
                   "hidden max-w-full truncate text-center text-[11px] sm:block",
                   current
-                    ? "font-medium text-foreground"
+                    ? "text-foreground font-medium"
                     : "text-muted-foreground",
                 )}
               >

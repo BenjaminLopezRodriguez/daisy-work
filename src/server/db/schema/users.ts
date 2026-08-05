@@ -18,7 +18,9 @@ export const users = createTable(
     /** Auth.js adapter columns. */
     emailVerified: d.timestamp({ withTimezone: true }),
     image: d.text(),
-    accountType: accountTypeEnum("account_type").notNull().default("individual"),
+    accountType: accountTypeEnum("account_type")
+      .notNull()
+      .default("individual"),
     /**
      * What the user said they came to do, asked once after first sign-in.
      * null = never asked. "hire" | "provide".

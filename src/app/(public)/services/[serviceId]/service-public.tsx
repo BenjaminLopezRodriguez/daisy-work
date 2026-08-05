@@ -69,7 +69,7 @@ export default function ServicePublicView({
       <Breadcrumbs trail={SERVICE_TRAIL} page={data.title} />
 
       {data.coverImageUrl ? (
-        <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-muted">
+        <div className="bg-muted relative aspect-video w-full overflow-hidden rounded-xl">
           <Image
             src={data.coverImageUrl}
             alt=""
@@ -98,16 +98,16 @@ export default function ServicePublicView({
       {data.workerProfileId ? (
         <Link
           href={`/providers/${data.workerProfileId}`}
-          className="inline-flex w-fit items-center text-sm font-medium underline underline-offset-4 hover:no-underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="focus-visible:ring-ring inline-flex w-fit items-center text-sm font-medium underline underline-offset-4 hover:no-underline focus-visible:ring-2 focus-visible:outline-none"
         >
           View {data.ownerName ?? "provider"}’s profile
         </Link>
       ) : null}
 
       {data.description ? (
-        <section className="rounded-xl border border-border bg-card p-4 text-sm">
+        <section className="border-border bg-card rounded-xl border p-4 text-sm">
           <h2 className="font-medium">What’s included</h2>
-          <p className="mt-2 whitespace-pre-wrap text-muted-foreground">
+          <p className="text-muted-foreground mt-2 whitespace-pre-wrap">
             {data.description}
           </p>
         </section>
@@ -118,7 +118,7 @@ export default function ServicePublicView({
           {data.tags.map((t) => (
             <span
               key={t}
-              className="rounded-full border border-border px-3 py-1 text-xs"
+              className="border-border rounded-full border px-3 py-1 text-xs"
             >
               {t}
             </span>
@@ -141,7 +141,7 @@ export default function ServicePublicView({
         {request.isPending ? "Sending…" : "Request this service"}
       </Button>
       {request.error ? (
-        <p className="text-sm text-destructive">{request.error.message}</p>
+        <p className="text-destructive text-sm">{request.error.message}</p>
       ) : null}
     </AppPage>
   );

@@ -113,14 +113,14 @@ export default function AccountAdsPage() {
 
       {myAds.length > 0 ? (
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Ad impressions</p>
+          <div className="border-border bg-card rounded-xl border p-4">
+            <p className="text-muted-foreground text-xs">Ad impressions</p>
             <p className="mt-1 text-2xl font-semibold tabular-nums">
               {totalImpressions}
             </p>
           </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Ad clicks</p>
+          <div className="border-border bg-card rounded-xl border p-4">
+            <p className="text-muted-foreground text-xs">Ad clicks</p>
             <p className="mt-1 text-2xl font-semibold tabular-nums">
               {totalClicks}
             </p>
@@ -129,7 +129,7 @@ export default function AccountAdsPage() {
       ) : null}
 
       <form
-        className="space-y-4 rounded-xl border border-border bg-card p-4"
+        className="border-border bg-card space-y-4 rounded-xl border p-4"
         onSubmit={(e) => {
           e.preventDefault();
           if (!canSubmit) return;
@@ -284,7 +284,7 @@ export default function AccountAdsPage() {
         ) : null}
 
         {(create.error ?? update.error) ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-destructive text-sm">
             Couldn’t save the ad. Check the fields and try again.
           </p>
         ) : null}
@@ -311,14 +311,14 @@ export default function AccountAdsPage() {
 
       {myAds.length > 0 ? (
         <section className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground">
+          <h2 className="text-muted-foreground text-sm font-medium">
             Your ads
           </h2>
-          <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+          <ul className="divide-border border-border bg-card divide-y rounded-xl border">
             {myAds.map((ad) => (
               <li key={ad.id} className="flex gap-3 px-4 py-3 text-sm">
                 {ad.imageUrl ? (
-                  <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-md bg-muted">
+                  <div className="bg-muted relative aspect-video w-24 shrink-0 overflow-hidden rounded-md">
                     <Image
                       src={ad.imageUrl}
                       alt=""
@@ -330,7 +330,7 @@ export default function AccountAdsPage() {
                 ) : null}
                 <div className="min-w-0 flex-1">
                   <p className="font-medium">{ad.headline}</p>
-                  <p className="text-xs text-muted-foreground capitalize">
+                  <p className="text-muted-foreground text-xs capitalize">
                     {ad.placement.replace("_", " ")} · {ad.status} ·{" "}
                     {ad.impressionCount} views · {ad.clickCount} clicks
                   </p>

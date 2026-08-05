@@ -144,7 +144,7 @@ export function ProviderProfileForm({
           maxLength={256}
           required
         />
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           One line. This is the first thing a poster reads.
         </p>
       </div>
@@ -169,7 +169,7 @@ export function ProviderProfileForm({
           onChange={(e) => setServices(e.target.value)}
           placeholder="panel upgrades, EV chargers, lighting"
         />
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           Separate with commas. Up to 12.
         </p>
       </div>
@@ -187,7 +187,7 @@ export function ProviderProfileForm({
                 aria-pressed={active}
                 className={cn(
                   "min-h-10 rounded-full border px-4 text-sm font-medium transition-colors",
-                  "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
                   active
                     ? "border-foreground bg-foreground text-background"
                     : "border-border text-muted-foreground hover:bg-muted",
@@ -199,7 +199,7 @@ export function ProviderProfileForm({
           })}
         </div>
         {workModes.length === 0 ? (
-          <p className="text-xs text-destructive">Pick at least one.</p>
+          <p className="text-destructive text-xs">Pick at least one.</p>
         ) : null}
       </fieldset>
 
@@ -213,7 +213,7 @@ export function ProviderProfileForm({
             onChange={(e) => setRate(e.target.value)}
             placeholder="65"
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             USD per hour. Leave blank if it depends on the job.
           </p>
         </div>
@@ -230,7 +230,7 @@ export function ProviderProfileForm({
       </div>
 
       {save.error ? (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-destructive text-sm">
           Couldn’t save your profile. Check the fields and try again.
         </p>
       ) : null}

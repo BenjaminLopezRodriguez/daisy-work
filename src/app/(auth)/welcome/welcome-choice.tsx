@@ -41,15 +41,18 @@ export function WelcomeChoice() {
           disabled={setIntent.isPending}
           onClick={() => setIntent.mutate({ choice })}
           className={cn(
-            "flex w-full items-start gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors",
-            "hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+            "border-border bg-card flex w-full items-start gap-3 rounded-xl border p-4 text-left transition-colors",
+            "hover:bg-muted/50 focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
             "disabled:pointer-events-none disabled:opacity-60",
           )}
         >
-          <Icon className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
+          <Icon
+            className="text-muted-foreground mt-0.5 size-5 shrink-0"
+            aria-hidden
+          />
           <span className="min-w-0">
             <span className="block text-sm font-semibold">{title}</span>
-            <span className="mt-0.5 block text-xs text-muted-foreground">
+            <span className="text-muted-foreground mt-0.5 block text-xs">
               {body}
             </span>
           </span>
@@ -57,7 +60,7 @@ export function WelcomeChoice() {
       ))}
 
       {setIntent.error ? (
-        <p role="alert" className="text-center text-xs text-destructive">
+        <p role="alert" className="text-destructive text-center text-xs">
           Couldn’t save that. Try again.
         </p>
       ) : null}

@@ -51,59 +51,61 @@ export default function AccountPage() {
         onChange={(url) => updateAvatar.mutate({ avatarUrl: url })}
       />
 
-      <div className="rounded-xl border border-border bg-card p-4 text-sm">
+      <div className="border-border bg-card rounded-xl border p-4 text-sm">
         <p className="font-medium">{currentUser.name}</p>
-        <p className="mt-1 text-muted-foreground">{currentUser.email}</p>
+        <p className="text-muted-foreground mt-1">{currentUser.email}</p>
         <div className="mt-3 flex flex-wrap gap-2">
-        {worker ? (
-          <Button asChild size="sm" variant="outline">
-            <Link href="/onboarding/provider">Edit provider profile</Link>
-          </Button>
-        ) : null}
-        {worker ? (
-          <Button asChild size="sm" variant="outline">
-            <Link href="/services">Manage services</Link>
-          </Button>
-        ) : null}
+          {worker ? (
+            <Button asChild size="sm" variant="outline">
+              <Link href="/onboarding/provider">Edit provider profile</Link>
+            </Button>
+          ) : null}
+          {worker ? (
+            <Button asChild size="sm" variant="outline">
+              <Link href="/services">Manage services</Link>
+            </Button>
+          ) : null}
         </div>
       </div>
 
       {/* Role switch — visible and reversible on mobile too. (§5.6) */}
       <section className="space-y-3">
         <h2 className="text-sm font-medium">Viewing as</h2>
-        <RoleSwitchRows onboardingChoice={currentUser.onboardingChoice ?? null} />
+        <RoleSwitchRows
+          onboardingChoice={currentUser.onboardingChoice ?? null}
+        />
       </section>
 
       {/* Reach */}
       <section className="space-y-3">
         <h2 className="text-sm font-medium">Reach</h2>
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Ad views</p>
+          <div className="border-border bg-card rounded-xl border p-4">
+            <p className="text-muted-foreground text-xs">Ad views</p>
             <p className="mt-1 text-2xl font-semibold tabular-nums">
               {adsLoading ? "—" : adImpressions}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-xs">
               {adClicks} clicks
             </p>
           </div>
           {worker ? (
-            <div className="rounded-xl border border-border bg-card p-4">
-              <p className="text-xs text-muted-foreground">Service views</p>
+            <div className="border-border bg-card rounded-xl border p-4">
+              <p className="text-muted-foreground text-xs">Service views</p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">
                 {serviceReach?.profileViewCount ?? 0}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-xs">
                 {serviceReach?.profileClickCount ?? 0} contact taps
               </p>
             </div>
           ) : (
-            <div className="rounded-xl border border-border bg-card p-4">
-              <p className="text-xs text-muted-foreground">Your postings</p>
+            <div className="border-border bg-card rounded-xl border p-4">
+              <p className="text-muted-foreground text-xs">Your postings</p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">
                 {jobsLoading ? "—" : myPostings.length}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">jobs you own</p>
+              <p className="text-muted-foreground mt-1 text-xs">jobs you own</p>
             </div>
           )}
         </div>
@@ -120,11 +122,11 @@ export default function AccountPage() {
         {jobsLoading ? (
           <Skeleton className="h-24 rounded-xl" />
         ) : myPostings.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             You haven’t posted a job yet.
           </p>
         ) : (
-          <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+          <ul className="divide-border border-border bg-card divide-y rounded-xl border">
             {myPostings.map((wo) => (
               <li
                 key={wo.id}
@@ -132,7 +134,7 @@ export default function AccountPage() {
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{wo.title}</p>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-2 text-xs">
                     <WorkStatusBadge status={wo.status} />
                     <span className="tabular-nums">
                       {formatMoney(wo.budgetAmount, wo.currency)}
@@ -162,18 +164,18 @@ export default function AccountPage() {
         {adsLoading ? (
           <Skeleton className="h-24 rounded-xl" />
         ) : myAds.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             No ads yet.{" "}
             <Link href="/account/ads" className="text-primary underline">
               Create one
             </Link>
           </p>
         ) : (
-          <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+          <ul className="divide-border border-border bg-card divide-y rounded-xl border">
             {myAds.slice(0, 5).map((ad) => (
               <li key={ad.id} className="flex gap-3 px-4 py-3">
                 {ad.imageUrl ? (
-                  <div className="relative aspect-video w-16 shrink-0 overflow-hidden rounded-md bg-muted">
+                  <div className="bg-muted relative aspect-video w-16 shrink-0 overflow-hidden rounded-md">
                     <Image
                       src={ad.imageUrl}
                       alt=""
@@ -185,7 +187,7 @@ export default function AccountPage() {
                 ) : null}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{ad.headline}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {ad.impressionCount} views · {ad.clickCount} clicks ·{" "}
                     {ad.status}
                   </p>
@@ -207,9 +209,9 @@ export default function AccountPage() {
               <Link href="/services">Services</Link>
             </Button>
           </div>
-          <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <div className="border-border bg-card overflow-hidden rounded-xl border">
             {serviceReach.coverImageUrl ? (
-              <div className="relative aspect-video w-full bg-muted">
+              <div className="bg-muted relative aspect-video w-full">
                 <Image
                   src={serviceReach.coverImageUrl}
                   alt=""
@@ -221,7 +223,7 @@ export default function AccountPage() {
             ) : null}
             <div className="p-4 text-sm">
               <p className="font-medium">{serviceReach.headline}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-xs">
                 {serviceReach.profileViewCount} profile views ·{" "}
                 {serviceReach.profileClickCount} contact taps
               </p>

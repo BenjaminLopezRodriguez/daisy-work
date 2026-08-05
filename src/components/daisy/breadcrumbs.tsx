@@ -41,7 +41,7 @@ export function Breadcrumbs({
   return (
     <nav
       aria-label="Breadcrumb"
-      className={cn("text-crumb w-full min-w-0 text-nav-ink-muted", className)}
+      className={cn("text-crumb text-nav-ink-muted w-full min-w-0", className)}
     >
       {/* Mobile: single back affordance. */}
       <Link
@@ -77,14 +77,14 @@ export function Breadcrumbs({
         ))}
         <li className="min-w-0">
           {page === null ? (
-            <span className="inline-block h-[1em] w-1/3 animate-pulse rounded bg-muted align-middle">
+            <span className="bg-muted inline-block h-[1em] w-1/3 animate-pulse rounded align-middle">
               <span className="sr-only">Loading</span>
             </span>
           ) : (
             <span
               aria-current="page"
               title={page}
-              className="block truncate text-nav-ink"
+              className="text-nav-ink block truncate"
             >
               {page}
             </span>

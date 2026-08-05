@@ -24,7 +24,7 @@ export default async function PublicLayout({
   }
 
   return (
-    <div className="min-h-dvh bg-background text-foreground">
+    <div className="bg-background text-foreground min-h-dvh">
       <PublicHeader signedIn={false} />
       {children}
     </div>

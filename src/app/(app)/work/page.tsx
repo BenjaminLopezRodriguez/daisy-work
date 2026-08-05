@@ -58,7 +58,7 @@ function CustomerWorkPage() {
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative min-w-0 flex-1">
           <Search
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
             aria-hidden
           />
           <Input
@@ -108,16 +108,16 @@ function CustomerWorkPage() {
           }
         />
       ) : (
-        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+        <ul className="divide-border border-border bg-card divide-y overflow-hidden rounded-xl border">
           {filtered.map((wo) => (
             <li key={wo.id}>
               <Link
                 href={`/work/${wo.id}`}
-                className="flex min-h-14 items-center gap-3 px-4 py-3 outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring"
+                className="hover:bg-muted/40 focus-visible:ring-ring flex min-h-14 items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2"
               >
                 <div className="min-w-0 flex-1 space-y-1">
                   <p className="truncate text-sm font-medium">{wo.title}</p>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
                     <WorkStatusBadge status={wo.status} />
                     <span className="tabular-nums">
                       {formatMoney(wo.budgetAmount, wo.currency)}
@@ -128,7 +128,7 @@ function CustomerWorkPage() {
                   </div>
                 </div>
                 <ChevronRight
-                  className="size-4 shrink-0 text-muted-foreground"
+                  className="text-muted-foreground size-4 shrink-0"
                   aria-hidden
                 />
               </Link>
@@ -167,7 +167,7 @@ function WorkerWorkDashboard() {
       <AdSlot placement="work_feed" title="Promoted for workers" />
 
       <section className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground">
+        <h2 className="text-muted-foreground text-sm font-medium">
           Assigned to you
         </h2>
         {mineLoading ? (
@@ -183,21 +183,21 @@ function WorkerWorkDashboard() {
             }
           />
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+          <ul className="divide-border border-border bg-card divide-y overflow-hidden rounded-xl border">
             {inbound.map((wo) => (
               <li key={wo.id}>
                 <Link
                   href={`/work/${wo.id}`}
-                  className="flex min-h-14 items-center gap-3 px-4 py-3 outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring"
+                  className="hover:bg-muted/40 focus-visible:ring-ring flex min-h-14 items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{wo.title}</p>
-                    <p className="text-xs text-muted-foreground capitalize">
+                    <p className="text-muted-foreground text-xs capitalize">
                       {wo.status.replaceAll("_", " ")}
                     </p>
                   </div>
                   <ChevronRight
-                    className="size-4 shrink-0 text-muted-foreground"
+                    className="text-muted-foreground size-4 shrink-0"
                     aria-hidden
                   />
                 </Link>
@@ -208,33 +208,33 @@ function WorkerWorkDashboard() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground">
+        <h2 className="text-muted-foreground text-sm font-medium">
           Your applications
         </h2>
         {appsLoading ? (
           <Skeleton className="h-20 rounded-xl" />
         ) : applications.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             No applications yet. Browse open jobs below.
           </p>
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+          <ul className="divide-border border-border bg-card divide-y overflow-hidden rounded-xl border">
             {applications.slice(0, 5).map((app) => (
               <li key={app.id}>
                 <Link
                   href={`/work/${app.workOrderId}`}
-                  className="flex min-h-14 items-center gap-3 px-4 py-3 outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring"
+                  className="hover:bg-muted/40 focus-visible:ring-ring flex min-h-14 items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
                       {app.jobTitle}
                     </p>
-                    <p className="text-xs text-muted-foreground capitalize">
+                    <p className="text-muted-foreground text-xs capitalize">
                       {app.status}
                     </p>
                   </div>
                   <ChevronRight
-                    className="size-4 shrink-0 text-muted-foreground"
+                    className="text-muted-foreground size-4 shrink-0"
                     aria-hidden
                   />
                 </Link>
@@ -246,12 +246,12 @@ function WorkerWorkDashboard() {
 
       <section className="space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-sm font-medium text-muted-foreground">
+          <h2 className="text-muted-foreground text-sm font-medium">
             Open jobs
           </h2>
           <div className="relative min-w-0 sm:max-w-xs">
             <Search
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+              className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
               aria-hidden
             />
             <Input
@@ -276,16 +276,16 @@ function WorkerWorkDashboard() {
             }
           />
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+          <ul className="divide-border border-border bg-card divide-y overflow-hidden rounded-xl border">
             {jobs.slice(0, 12).map((wo) => (
               <li key={wo.id}>
                 <Link
                   href={`/work/${wo.id}`}
-                  className="flex min-h-14 items-center gap-3 px-4 py-3 outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring"
+                  className="hover:bg-muted/40 focus-visible:ring-ring flex min-h-14 items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2"
                 >
                   <div className="min-w-0 flex-1 space-y-1">
                     <p className="truncate text-sm font-medium">{wo.title}</p>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
                       <span className="tabular-nums">
                         {formatMoney(wo.budgetAmount, wo.currency)}
                       </span>
@@ -306,7 +306,7 @@ function WorkerWorkDashboard() {
                     </div>
                   </div>
                   <ChevronRight
-                    className="size-4 shrink-0 text-muted-foreground"
+                    className="text-muted-foreground size-4 shrink-0"
                     aria-hidden
                   />
                 </Link>

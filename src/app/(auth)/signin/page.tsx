@@ -43,7 +43,7 @@ export default async function SignInPage({
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-1 text-center">
           <h1 className="text-xl font-medium">Sign in to Daisy.work</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Pick how you&apos;re using Daisy today.
           </p>
         </div>
@@ -55,10 +55,13 @@ export default async function SignInPage({
               variant="outline"
               className="h-auto w-full justify-start gap-3 px-4 py-3 text-left"
             >
-              <Wrench className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+              <Wrench
+                className="text-muted-foreground size-5 shrink-0"
+                aria-hidden
+              />
               <span className="min-w-0">
                 <span className="block text-sm font-semibold">Find work</span>
-                <span className="mt-0.5 block text-xs text-muted-foreground">
+                <span className="text-muted-foreground mt-0.5 block text-xs">
                   Browse jobs, apply, and manage your work dashboard.
                 </span>
               </span>
@@ -72,7 +75,9 @@ export default async function SignInPage({
             >
               <Briefcase className="size-5 shrink-0 opacity-90" aria-hidden />
               <span className="min-w-0">
-                <span className="block text-sm font-semibold">Hire someone</span>
+                <span className="block text-sm font-semibold">
+                  Hire someone
+                </span>
                 <span className="mt-0.5 block text-xs opacity-90">
                   Post jobs, browse the marketplace, and pick who does the work.
                 </span>

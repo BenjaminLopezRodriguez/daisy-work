@@ -151,6 +151,39 @@ export const workRouter = createTRPCRouter({
     }),
 
   /**
+   * The customer signs off. Terminal state for the happy path, and the gate
+   * that unlocks reviews in both directions.
+   */
+  approve: protectedProcedure
+    .input(z.object({ workOrderId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const wo = await requireOwnedWorkOrder(
+        input.workOrderId,
+        ctx.session.user.id,
+      );
+      if (wo.status === "approved") return { ok: true as const };
+      if (!wo.assigneeId)
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Nobody is assigned to this job yet",
+        });
+
+      await ctx.db
+        .update(workOrders)
+        .set({ status: "approved" })
+        .where(eq(workOrders.id, wo.id));
+
+      await notify({
+        userId: wo.assigneeId,
+        title: `“${wo.title}” was approved`,
+        body: "The customer approved your work. Leave them a review.",
+        href: `/work/${wo.id}`,
+      });
+
+      return { ok: true as const };
+    }),
+
+  /**
    * Request a packaged service: publish the draft (if any) and assign the
    * service owner. Creates a short draft from title/description when no draftId.
    */
@@ -246,6 +279,7 @@ export const workRouter = createTRPCRouter({
           id: workOrders.id,
           title: workOrders.title,
           requesterId: workOrders.requesterId,
+          assigneeId: workOrders.assigneeId,
         })
         .from(workOrders)
         .where(eq(workOrders.id, input.workOrderId))
@@ -303,6 +337,15 @@ export const workRouter = createTRPCRouter({
           }),
         )
         .returning();
+
+      // Uploading the deliverable IS submitting it — a separate "now really
+      // submit" button is a step users forget, leaving jobs stuck forever.
+      if (wo.assigneeId === userId) {
+        await db
+          .update(workOrders)
+          .set({ status: "submitted" })
+          .where(eq(workOrders.id, wo.id));
+      }
 
       if (wo.requesterId !== userId) {
         await notify({

@@ -56,10 +56,7 @@ export async function listActiveAds(
       and(
         eq(advertisements.placement, placement),
         eq(advertisements.status, "active"),
-        or(
-          isNull(advertisements.startsAt),
-          lte(advertisements.startsAt, now),
-        ),
+        or(isNull(advertisements.startsAt), lte(advertisements.startsAt, now)),
         or(isNull(advertisements.endsAt), gte(advertisements.endsAt, now)),
       ),
     )
@@ -140,10 +137,7 @@ export async function getAdForUser(
     .select()
     .from(advertisements)
     .where(
-      and(
-        eq(advertisements.id, id),
-        eq(advertisements.ownerUserId, userId),
-      ),
+      and(eq(advertisements.id, id), eq(advertisements.ownerUserId, userId)),
     )
     .limit(1);
   return row ? mapRow(row) : null;

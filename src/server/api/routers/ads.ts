@@ -60,29 +60,31 @@ export const adsRouter = createTRPCRouter({
       return ad;
     }),
 
-  create: protectedProcedure.input(adFields).mutation(async ({ ctx, input }) => {
-    const userId = ctx.session.user.id;
+  create: protectedProcedure
+    .input(adFields)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
 
-    if (input.advertiserType === "company" && !input.companyName?.trim()) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Company name is required for company ads",
+      if (input.advertiserType === "company" && !input.companyName?.trim()) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Company name is required for company ads",
+        });
+      }
+
+      return createAd({
+        advertiserType: input.advertiserType,
+        ownerUserId: userId,
+        companyName:
+          input.advertiserType === "company" ? input.companyName : null,
+        headline: input.headline,
+        body: input.body,
+        imageUrl: input.imageUrl,
+        ctaLabel: input.ctaLabel,
+        ctaUrl: input.ctaUrl,
+        placement: input.placement,
       });
-    }
-
-    return createAd({
-      advertiserType: input.advertiserType,
-      ownerUserId: userId,
-      companyName:
-        input.advertiserType === "company" ? input.companyName : null,
-      headline: input.headline,
-      body: input.body,
-      imageUrl: input.imageUrl,
-      ctaLabel: input.ctaLabel,
-      ctaUrl: input.ctaUrl,
-      placement: input.placement,
-    });
-  }),
+    }),
 
   update: protectedProcedure
     .input(

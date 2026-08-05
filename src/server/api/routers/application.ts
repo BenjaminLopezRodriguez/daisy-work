@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import {
+  acceptApplication,
   applyDenialReason,
   getJobForApply,
   insertApplication,
@@ -67,6 +68,50 @@ export const applicationRouter = createTRPCRouter({
       if (job.requesterId !== ctx.session.user.id)
         throw new TRPCError({ code: "FORBIDDEN" });
       return listApplicationsForJob(input.workOrderId);
+    }),
+
+  /**
+   * The job owner picks someone. This is the hinge of the whole marketplace:
+   * it assigns the work order, closes the job to further applicants, and tells
+   * everyone who applied where they stand.
+   */
+  accept: protectedProcedure
+    .input(z.object({ applicationId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const accepted = await acceptApplication(input.applicationId, userId);
+
+      if (accepted === "NOT_FOUND")
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Application not found",
+        });
+      if (accepted === "NOT_OWNER")
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not your job" });
+      if (accepted === "ALREADY_ASSIGNED")
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This job already has someone assigned",
+        });
+
+      await notify({
+        userId: accepted.applicantId,
+        title: `You got the job: “${accepted.jobTitle}”`,
+        body: "The customer accepted your application. Open it to get started.",
+        href: `/work/${accepted.workOrderId}`,
+      });
+
+      // Everyone else deserves to know the job is closed, not left guessing.
+      for (const other of accepted.declinedApplicantIds) {
+        await notify({
+          userId: other,
+          title: `“${accepted.jobTitle}” went to someone else`,
+          body: "The customer picked another applicant. Keep an eye out for new jobs.",
+          href: "/marketplace",
+        });
+      }
+
+      return { ok: true as const, workOrderId: accepted.workOrderId };
     }),
 
   /** The caller's own applications, plus their id so the UI can branch. */

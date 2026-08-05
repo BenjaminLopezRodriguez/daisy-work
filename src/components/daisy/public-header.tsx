@@ -12,7 +12,7 @@ export function PublicHeader({ signedIn }: { signedIn: boolean }) {
   const browse = SIGNED_OUT_NAV.find((item) => item.href === "/marketplace");
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background">
+    <header className="border-border bg-background sticky top-0 z-40 border-b">
       <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-3 sm:px-6">
         <Link
           href="/"

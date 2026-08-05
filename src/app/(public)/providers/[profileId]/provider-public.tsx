@@ -5,20 +5,18 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-import { AppPage, EmptyState, PageHeader } from "@/components/daisy";
+import { AppPage, EmptyState, PageHeader, ShareRow } from "@/components/daisy";
+import { ReviewList, TrustBar } from "@/components/daisy/trust-bar";
 import { Breadcrumbs } from "@/components/daisy/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@/domain";
 import { api } from "@/trpc/react";
 
-/**
- * §3.3: `Browse › Providers › {name}`. No `/providers` index exists yet
- * (design system §8), so the Providers crumb is plain text, not a dead link.
- */
+/** §3.3: `Browse › Providers › {name}`. Both ancestors are real routes now. */
 const PROVIDER_TRAIL = [
   { label: "Browse", href: "/marketplace" },
-  { label: "Providers" },
+  { label: "Providers", href: "/providers" },
 ];
 
 /** Legacy provider page — prefer service listings; keep for profile deep links. */
@@ -31,7 +29,9 @@ export default function ProviderPublicPage({
   const { data, isLoading, isError } = api.provider.byId.useQuery({
     id: profileId,
   });
-  const { data: services = [] } = api.services.listActive.useQuery({ limit: 48 });
+  const { data: services = [] } = api.services.listActive.useQuery({
+    limit: 48,
+  });
   const recordView = api.provider.recordView.useMutation();
 
   const theirs = services.filter((s) => s.workerProfileId === profileId);
@@ -72,7 +72,7 @@ export default function ProviderPublicPage({
       <Breadcrumbs trail={PROVIDER_TRAIL} page={data.name} />
 
       {data.coverImageUrl ? (
-        <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-muted">
+        <div className="bg-muted relative aspect-video w-full overflow-hidden rounded-xl">
           <Image
             src={data.coverImageUrl}
             alt=""
@@ -86,6 +86,9 @@ export default function ProviderPublicPage({
 
       <PageHeader title={data.headline} description={data.name} />
 
+      <TrustBar userId={data.userId} />
+      <ShareRow title={`${data.name} · ${data.headline}`} />
+
       {theirs.length > 0 ? (
         <section className="space-y-3">
           <h2 className="text-sm font-medium">Services</h2>
@@ -94,10 +97,10 @@ export default function ProviderPublicPage({
               <li key={s.id}>
                 <Link
                   href={`/services/${s.id}`}
-                  className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm hover:bg-muted/40"
+                  className="border-border bg-card hover:bg-muted/40 flex items-center justify-between rounded-xl border px-4 py-3 text-sm"
                 >
                   <span className="font-medium">{s.title}</span>
-                  <span className="tabular-nums text-muted-foreground">
+                  <span className="text-muted-foreground tabular-nums">
                     {formatMoney(s.priceCents, "USD")}
                   </span>
                 </Link>
@@ -117,6 +120,8 @@ export default function ProviderPublicPage({
           Request help from {data.name}
         </Button>
       )}
+
+      <ReviewList userId={data.userId} />
     </AppPage>
   );
 }

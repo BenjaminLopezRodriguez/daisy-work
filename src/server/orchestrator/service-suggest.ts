@@ -62,7 +62,10 @@ async function priceContext(
     )
     .limit(200);
 
-  const prices = rows.map((r) => r.priceCents).filter((p) => p > 0).sort((a, b) => a - b);
+  const prices = rows
+    .map((r) => r.priceCents)
+    .filter((p) => p > 0)
+    .sort((a, b) => a - b);
   if (prices.length === 0) return null;
 
   const mid = Math.floor(prices.length / 2);

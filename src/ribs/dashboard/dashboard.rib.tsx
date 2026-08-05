@@ -20,7 +20,8 @@ export function DashboardView() {
   const [prompt, setPrompt] = useState("");
   const { data: jobs = [], isLoading } = api.work.list.useQuery();
 
-  const first = session.currentUser.name.split(" ")[0] ?? session.currentUser.name;
+  const first =
+    session.currentUser.name.split(" ")[0] ?? session.currentUser.name;
 
   if (session.currentUser.onboardingChoice === "provide") {
     return <ProviderHome firstName={first} />;
@@ -39,10 +40,8 @@ export function DashboardView() {
     <AppPage width="form" className="max-w-2xl space-y-10">
       <section className="space-y-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Hi, {first}
-          </h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl font-semibold tracking-tight">Hi, {first}</h1>
+          <p className="text-muted-foreground text-sm">
             Describe what you need and Daisy finds matches.
           </p>
         </div>
@@ -52,7 +51,7 @@ export function DashboardView() {
             e.preventDefault();
             submit();
           }}
-          className="rounded-xl border border-border bg-card p-3 shadow-sm"
+          className="border-border bg-card rounded-xl border p-3 shadow-sm"
         >
           <Textarea
             value={prompt}
@@ -84,7 +83,7 @@ export function DashboardView() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-medium text-muted-foreground">
+          <h2 className="text-muted-foreground text-sm font-medium">
             Your jobs
           </h2>
           <Button asChild variant="ghost" size="sm" className="h-8 px-2">
@@ -100,18 +99,18 @@ export function DashboardView() {
             description="Describe what you need above and Daisy drafts the post."
           />
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+          <ul className="divide-border border-border bg-card divide-y overflow-hidden rounded-xl border">
             {[...drafts, ...active].slice(0, 8).map((wo) => (
               <li key={wo.id}>
                 <Link
                   href={`/work/${wo.id}`}
                   className={cn(
-                    "flex min-h-14 items-center gap-3 px-4 py-3 outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring",
+                    "hover:bg-muted/40 focus-visible:ring-ring flex min-h-14 items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2",
                   )}
                 >
                   <div className="min-w-0 flex-1 space-y-1">
                     <p className="truncate text-sm font-medium">{wo.title}</p>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
                       <WorkStatusBadge status={wo.status} />
                       <span className="tabular-nums">
                         {formatMoney(wo.budgetAmount, wo.currency)}
@@ -119,7 +118,7 @@ export function DashboardView() {
                     </div>
                   </div>
                   <ChevronRight
-                    className="size-4 shrink-0 text-muted-foreground"
+                    className="text-muted-foreground size-4 shrink-0"
                     aria-hidden
                   />
                 </Link>
@@ -147,15 +146,17 @@ function ProviderHome({ firstName }: { firstName: string }) {
   return (
     <AppPage width="form" className="max-w-2xl space-y-10">
       <section className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Hi, {firstName}</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Hi, {firstName}
+        </h1>
+        <p className="text-muted-foreground text-sm">
           Your listings and the work coming in.
         </p>
       </section>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-medium text-muted-foreground">
+          <h2 className="text-muted-foreground text-sm font-medium">
             Your listings
           </h2>
           <Button asChild variant="ghost" size="sm" className="h-8 px-2">
@@ -176,18 +177,18 @@ function ProviderHome({ firstName }: { firstName: string }) {
             }
           />
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+          <ul className="divide-border border-border bg-card divide-y overflow-hidden rounded-xl border">
             {listings.data.slice(0, 8).map((s) => (
               <li key={s.id}>
                 <Link
                   href={`/services/${s.id}`}
                   className={cn(
-                    "flex min-h-14 items-center gap-3 px-4 py-3 outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring",
+                    "hover:bg-muted/40 focus-visible:ring-ring flex min-h-14 items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2",
                   )}
                 >
                   <div className="min-w-0 flex-1 space-y-1">
                     <p className="truncate text-sm font-medium">{s.title}</p>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
                       <span className="tabular-nums">
                         {formatMoney(s.priceCents, "USD")}
                       </span>
@@ -196,7 +197,7 @@ function ProviderHome({ firstName }: { firstName: string }) {
                     </div>
                   </div>
                   <ChevronRight
-                    className="size-4 shrink-0 text-muted-foreground"
+                    className="text-muted-foreground size-4 shrink-0"
                     aria-hidden
                   />
                 </Link>
@@ -207,7 +208,7 @@ function ProviderHome({ firstName }: { firstName: string }) {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground">
+        <h2 className="text-muted-foreground text-sm font-medium">
           Your profile reach
         </h2>
         {reach.isLoading ? (
@@ -223,13 +224,13 @@ function ProviderHome({ firstName }: { firstName: string }) {
             }
           />
         ) : (
-          <dl className="grid grid-cols-2 gap-4 rounded-xl border border-border bg-card p-4">
+          <dl className="border-border bg-card grid grid-cols-2 gap-4 rounded-xl border p-4">
             <div>
-              <dt className="text-xs text-muted-foreground">Profile views</dt>
+              <dt className="text-muted-foreground text-xs">Profile views</dt>
               <dd className="text-lg font-semibold tabular-nums">{views}</dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Profile clicks</dt>
+              <dt className="text-muted-foreground text-xs">Profile clicks</dt>
               <dd className="text-lg font-semibold tabular-nums">{clicks}</dd>
             </div>
           </dl>
@@ -237,7 +238,7 @@ function ProviderHome({ firstName }: { firstName: string }) {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground">
+        <h2 className="text-muted-foreground text-sm font-medium">
           Looking for work?
         </h2>
         <Button asChild variant="outline">

@@ -58,17 +58,19 @@ export function PageHeader({
       )}
     >
       <div className="min-w-0 space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight break-words text-balance sm:text-3xl">
+        <h1 className="text-2xl font-semibold tracking-tight text-balance break-words sm:text-3xl">
           {title}
         </h1>
         {description ? (
-          <p className="max-w-2xl text-sm text-muted-foreground text-pretty sm:text-base">
+          <p className="text-muted-foreground max-w-2xl text-sm text-pretty sm:text-base">
             {description}
           </p>
         ) : null}
       </div>
       {trailing ? (
-        <div className="flex shrink-0 flex-wrap items-center gap-2">{trailing}</div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {trailing}
+        </div>
       ) : null}
     </header>
   );

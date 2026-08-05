@@ -172,9 +172,7 @@ export async function matchServices(
 
   const scored = all
     .map((s) => {
-      const hay = tokenize(
-        `${s.title} ${s.description} ${s.tags.join(" ")}`,
-      );
+      const hay = tokenize(`${s.title} ${s.description} ${s.tags.join(" ")}`);
       let score = 0;
       for (const t of hay) {
         if (tokens.has(t)) score += 1;

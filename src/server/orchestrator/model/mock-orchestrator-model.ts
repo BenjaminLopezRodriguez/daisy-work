@@ -1,4 +1,9 @@
-import type { OrchestratorInput, OrchestratorModel, OrchestratorPlan, WorkPlan } from "../orchestrator.types";
+import type {
+  OrchestratorInput,
+  OrchestratorModel,
+  OrchestratorPlan,
+  WorkPlan,
+} from "../orchestrator.types";
 
 function inferPlan(message: string): WorkPlan {
   const lower = message.toLowerCase();

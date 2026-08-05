@@ -30,7 +30,7 @@ export function DaisyAppShell({
       {/* First focusable element on every page. (§6.4) */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-md focus:bg-nav-surface focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-nav-ink focus:shadow-nav-float focus:ring-2 focus:ring-nav-focus focus:outline-none"
+        className="focus:bg-nav-surface focus:text-nav-ink focus:shadow-nav-float focus:ring-nav-focus sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-md focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:ring-2 focus:outline-none"
       >
         Skip to content
       </a>
@@ -40,7 +40,7 @@ export function DaisyAppShell({
           userAvatar={userAvatar}
           onboardingChoice={onboardingChoice}
         />
-        <SidebarInset className="min-h-dvh bg-background">
+        <SidebarInset className="bg-background min-h-dvh">
           <MobileHeader
             title={title}
             userName={userName}

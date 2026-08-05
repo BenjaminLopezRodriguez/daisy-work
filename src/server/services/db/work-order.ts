@@ -13,7 +13,10 @@ import {
 } from "@/domain";
 import { db } from "@/server/db";
 import { workOrders, type users } from "@/server/db/schema";
-import type { CreateDraftInput, WorkOrderService } from "@/server/services/types";
+import type {
+  CreateDraftInput,
+  WorkOrderService,
+} from "@/server/services/types";
 import {
   assignInputSchema,
   createDraftInputSchema,
@@ -38,11 +41,12 @@ const RISK_FROM_DB: Record<string, RiskLevel> = {
   level_4: RiskLevel.L4,
 };
 
-const MODE_TO_DB: Record<WorkMode, "remote" | "on_site" | "hybrid" | "local"> = {
-  remote: "remote",
-  on_site: "on_site",
-  hybrid: "hybrid",
-};
+const MODE_TO_DB: Record<WorkMode, "remote" | "on_site" | "hybrid" | "local"> =
+  {
+    remote: "remote",
+    on_site: "on_site",
+    hybrid: "hybrid",
+  };
 
 function mapLocation(
   row: typeof workOrders.$inferSelect,
