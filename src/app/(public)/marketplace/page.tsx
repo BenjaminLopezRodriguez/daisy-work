@@ -589,7 +589,7 @@ function MarketplaceBrowse() {
               {activeFilters.length > 0 ? (
                 <span
                   aria-hidden
-                  className="absolute -top-1 -right-1 min-w-5 rounded-full bg-nav-accent px-1 text-[11px] leading-5 font-medium text-nav-accent-ink tabular-nums"
+                  className="absolute -top-1 -right-1 min-w-5 rounded-full bg-nav-accent px-1 text-xs leading-5 font-medium text-nav-accent-ink tabular-nums"
                 >
                   {activeFilters.length}
                 </span>
@@ -635,7 +635,7 @@ function MarketplaceBrowse() {
               {activeFilters.length > 0 ? (
                 <span
                   aria-hidden
-                  className="absolute -top-1 -right-1 min-w-5 rounded-full bg-nav-accent px-1 text-[11px] leading-5 font-medium text-nav-accent-ink tabular-nums"
+                  className="absolute -top-1 -right-1 min-w-5 rounded-full bg-nav-accent px-1 text-xs leading-5 font-medium text-nav-accent-ink tabular-nums"
                 >
                   {activeFilters.length}
                 </span>
@@ -825,7 +825,7 @@ function MarketplaceBrowse() {
                   )}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <span className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                    <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                       {wo.category}
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -845,7 +845,7 @@ function MarketplaceBrowse() {
                       {wo.description}
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                     <span className="font-semibold tabular-nums text-foreground">
                       {priceLabel(wo)}
                     </span>

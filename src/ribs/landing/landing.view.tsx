@@ -225,7 +225,12 @@ export function LandingView() {
             </button>
           </div>
 
+          {/* Same set, same order as PublicHeader, so the chrome doesn't shift
+              when a visitor moves from here into a job or a profile. */}
           <div className="flex shrink-0 items-center gap-2">
+            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+              <Link href="/marketplace">Browse</Link>
+            </Button>
             <Button asChild variant="ghost" size="sm">
               <Link href="/signin">Sign in</Link>
             </Button>
@@ -419,7 +424,7 @@ export function LandingView() {
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <span className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                      <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                         {wo.category}
                       </span>
                       <span className="text-xs text-muted-foreground">
@@ -434,7 +439,7 @@ export function LandingView() {
                         {wo.description}
                       </p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                       <span className="font-semibold tabular-nums text-foreground">
                         {priceLabel(wo)}
                       </span>

@@ -119,25 +119,24 @@ export function MobileBottomNav({
           // The Act slot is the elevated centre action. (§5.5)
           if (tab.emphasize) {
             return (
-              <li key={tab.href} className="relative">
+              /* Emphasised, but in normal flow: an element hanging outside the
+                 bar clips against the viewport on short screens. */
+              <li key={tab.href}>
                 <Link
                   href={tab.href}
                   aria-current={active ? "page" : undefined}
-                  className="text-nav-ink-muted flex h-full min-h-12 flex-col items-center justify-center gap-0.5 text-[length:var(--text-tab-label,0.625rem)] font-medium focus-visible:ring-2 focus-visible:ring-nav-focus focus-visible:ring-inset focus-visible:outline-none"
+                  className="flex h-full min-h-12 flex-col items-center justify-center gap-0.5 text-[length:var(--text-tab-label,0.625rem)] font-medium text-nav-ink-muted focus-visible:ring-2 focus-visible:ring-nav-focus focus-visible:ring-inset focus-visible:outline-none"
                 >
                   <span
                     className={cn(
-                      "absolute -top-5 left-1/2 flex size-12 -translate-x-1/2 items-center justify-center rounded-full bg-nav-active text-primary-foreground shadow-nav-float",
-                      "transition-transform duration-100 active:scale-96",
+                      "flex size-7 items-center justify-center rounded-full bg-nav-active text-primary-foreground",
+                      "transition-transform duration-100 active:scale-95",
                       active && "ring-2 ring-nav-active ring-offset-2",
                     )}
                     aria-hidden
                   >
-                    <Icon className="size-6" />
+                    <Icon className="size-4" />
                   </span>
-                  {/* Reserves the same space the other tabs' icons take, so
-                      every label sits on one line. */}
-                  <span className="size-5" aria-hidden />
                   {tab.label}
                 </Link>
               </li>
@@ -159,7 +158,7 @@ export function MobileBottomNav({
                 {active ? (
                   <span
                     aria-hidden
-                    className="absolute inset-x-3 top-0 h-[3px] rounded-b-full bg-nav-active"
+                    className="absolute inset-x-3 top-0 h-0.5 rounded-b-full bg-nav-active"
                   />
                 ) : null}
                 <Icon

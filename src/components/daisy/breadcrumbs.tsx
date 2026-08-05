@@ -33,8 +33,10 @@ export function Breadcrumbs({
   const parent = [...trail].reverse().find((c) => c.href);
   if (!parent?.href) return null;
 
+  // Hit area comes from padding, not a negatively-inset pseudo-element: that
+  // overhangs the viewport edge and widens the page on small screens.
   const linkClass =
-    "relative rounded-sm underline-offset-4 transition-colors hover:text-nav-ink hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nav-focus focus-visible:ring-offset-2 before:absolute before:-inset-1.5 before:content-['']";
+    "rounded-sm py-1.5 underline-offset-4 transition-colors hover:text-nav-ink hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nav-focus focus-visible:ring-offset-2";
 
   return (
     <nav
@@ -59,12 +61,12 @@ export function Breadcrumbs({
               <Link
                 href={crumb.href}
                 title={crumb.label}
-                className={cn(linkClass, "block max-w-[32ch] truncate")}
+                className={cn(linkClass, "block truncate")}
               >
                 {crumb.label}
               </Link>
             ) : (
-              <span title={crumb.label} className="block max-w-[32ch] truncate">
+              <span title={crumb.label} className="block truncate">
                 {crumb.label}
               </span>
             )}
@@ -75,14 +77,14 @@ export function Breadcrumbs({
         ))}
         <li className="min-w-0">
           {page === null ? (
-            <span className="inline-block h-[1em] w-32 animate-pulse rounded bg-muted align-middle">
+            <span className="inline-block h-[1em] w-1/3 animate-pulse rounded bg-muted align-middle">
               <span className="sr-only">Loading</span>
             </span>
           ) : (
             <span
               aria-current="page"
               title={page}
-              className="block max-w-[40ch] truncate text-nav-ink"
+              className="block truncate text-nav-ink"
             >
               {page}
             </span>

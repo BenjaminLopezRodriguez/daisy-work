@@ -316,9 +316,10 @@
 }
 
 .app-content-pad {
-  /* Extra clearance for elevated center Post control above the tab bar */
+  /* Clears the fixed tab bar. The centre action sits inside the bar now, so no
+     extra reserve is needed for anything hanging above it. */
   padding-bottom: calc(
-    var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + 2.5rem
+    var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + 1rem
   );
 }
 
