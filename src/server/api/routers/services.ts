@@ -16,6 +16,7 @@ import {
   recordServiceView,
   upsertServiceListing,
 } from "@/server/services/db/service-listing";
+import { suggestServiceListing } from "@/server/orchestrator/service-suggest";
 
 const serviceInput = z.object({
   id: z.string().uuid().optional(),
@@ -28,6 +29,14 @@ const serviceInput = z.object({
 });
 
 export const servicesRouter = createTRPCRouter({
+  /**
+   * Drafts a listing from a short hint. Returns null when the model is
+   * unavailable so the UI can say so instead of silently filling nothing.
+   */
+  suggest: protectedProcedure
+    .input(z.object({ hint: z.string().trim().min(3).max(500) }))
+    .mutation(async ({ input }) => suggestServiceListing(input.hint)),
+
   mine: protectedProcedure.query(async ({ ctx }) => {
     return listServicesForUser(ctx.session.user.id);
   }),

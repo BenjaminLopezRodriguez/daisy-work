@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { MapPin, SlidersHorizontal } from "lucide-react";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { AdSlot } from "@/components/daisy/ad-slot";
@@ -21,6 +22,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { BudgetType, formatMoney, WorkMode } from "@/domain";
 import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
@@ -347,6 +353,58 @@ function MarketplaceBrowse() {
   const state = useBrowseState();
   const { scope, q, cat, mode, min, max, sort, write } = state;
   const [sheetOpen, setSheetOpen] = useState(false);
+  /** What the last parse inferred, so it can be shown and undone (§task 2). */
+  const [inferred, setInferred] = useState<{ raw: string; keys: string[] } | null>(
+    null,
+  );
+
+  const parse = api.orchestrator.parseSearchFilters.useMutation();
+
+  const runSearch = async (rawInput: string) => {
+    const raw = rawInput.trim();
+    const reset = { cat: undefined, mode: undefined, min: undefined, max: undefined, sort: undefined };
+    if (!raw) {
+      setInferred(null);
+      write({ q: undefined, ...reset });
+      return;
+    }
+    try {
+      const { filters } = await parse.mutateAsync({ query: raw.slice(0, 300) });
+      const patch = {
+        q: filters.q ?? raw,
+        cat: filters.cat,
+        mode: filters.mode,
+        min: filters.min,
+        max: filters.max,
+        sort: filters.sort === "recent" ? undefined : filters.sort,
+      };
+      const keys = Object.entries(patch)
+        .filter(([k, v]) => k !== "q" && v !== undefined)
+        .map(([k]) => k);
+      setInferred(keys.length > 0 ? { raw, keys } : null);
+      write({ ...reset, ...patch });
+    } catch {
+      // Search must always do something: plain text search.
+      setInferred(null);
+      write({ q: raw, ...reset });
+      toast.error("Could not read filters from your search", {
+        description: "Searched by text instead.",
+      });
+    }
+  };
+
+  const undoInferred = () => {
+    const raw = inferred?.raw ?? q;
+    setInferred(null);
+    write({
+      q: raw || undefined,
+      cat: undefined,
+      mode: undefined,
+      min: undefined,
+      max: undefined,
+      sort: undefined,
+    });
+  };
 
   const { data: allJobs = [], isLoading: jobsLoading } = api.work.browse.useQuery(
     q ? { q } : undefined,
@@ -422,6 +480,14 @@ function MarketplaceBrowse() {
 
   const resultCount = scope === "services" ? filteredServices.length : jobs.length;
 
+  // Only chips still present in the URL count as inferred.
+  const activeKeys = new Set(activeFilters.map((f) => f.key));
+  const inferredKeys = (inferred?.keys ?? []).filter((k) => activeKeys.has(k));
+  const filterLabel =
+    activeFilters.length > 0
+      ? `Filters, ${activeFilters.length} active`
+      : "Filters";
+
   return (
     <AppPage width="form" className="max-w-6xl space-y-8">
       <PageHeader
@@ -440,7 +506,7 @@ function MarketplaceBrowse() {
         onSubmit={(e) => {
           e.preventDefault();
           const value = new FormData(e.currentTarget).get("q");
-          write({ q: typeof value === "string" ? value.trim() : undefined });
+          void runSearch(typeof value === "string" ? value : "");
         }}
       >
         <Input
@@ -453,8 +519,13 @@ function MarketplaceBrowse() {
           className="h-11 text-search"
           aria-label="Search the marketplace"
         />
-        <Button type="submit" className="min-h-11 shrink-0">
-          Search
+        <Button
+          type="submit"
+          className="min-h-11 shrink-0"
+          disabled={parse.isPending}
+          aria-busy={parse.isPending}
+        >
+          {parse.isPending ? "Searching…" : "Search"}
         </Button>
       </form>
 
@@ -508,10 +579,21 @@ function MarketplaceBrowse() {
       <div className="flex flex-wrap items-center gap-2">
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" className="min-h-11 lg:hidden">
+            <Button
+              variant="outline"
+              size="icon"
+              className="relative size-11 shrink-0 lg:hidden"
+              aria-label={filterLabel}
+            >
               <SlidersHorizontal className="size-4" aria-hidden />
-              Filters
-              {activeFilters.length > 0 ? ` (${activeFilters.length})` : ""}
+              {activeFilters.length > 0 ? (
+                <span
+                  aria-hidden
+                  className="absolute -top-1 -right-1 min-w-5 rounded-full bg-nav-accent px-1 text-[11px] leading-5 font-medium text-nav-accent-ink tabular-nums"
+                >
+                  {activeFilters.length}
+                </span>
+              ) : null}
             </Button>
           </SheetTrigger>
           <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto">
@@ -541,17 +623,73 @@ function MarketplaceBrowse() {
           </SheetContent>
         </Sheet>
 
-        {activeFilters.map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            onClick={f.clear}
-            aria-label={`Remove filter: ${f.label}`}
-            className="min-h-11 rounded-nav-pill bg-nav-active-wash px-3 text-chip text-nav-ink outline-none focus-visible:ring-2 focus-visible:ring-nav-focus focus-visible:ring-offset-2"
-          >
-            {f.label} ✕
-          </button>
-        ))}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="relative hidden size-11 shrink-0 lg:inline-flex"
+              aria-label={filterLabel}
+            >
+              <SlidersHorizontal className="size-4" aria-hidden />
+              {activeFilters.length > 0 ? (
+                <span
+                  aria-hidden
+                  className="absolute -top-1 -right-1 min-w-5 rounded-full bg-nav-accent px-1 text-[11px] leading-5 font-medium text-nav-accent-ink tabular-nums"
+                >
+                  {activeFilters.length}
+                </span>
+              ) : null}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-80 max-h-[70dvh] overflow-y-auto">
+            <FilterGroups state={state} categories={categories} showCategory />
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-4 min-h-11 w-full"
+              onClick={clearAll}
+            >
+              Clear all
+            </Button>
+          </PopoverContent>
+        </Popover>
+
+        {inferredKeys.length > 0 ? (
+          <>
+            <span className="text-chip text-nav-ink-muted">
+              From your search:
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              className="min-h-11 text-chip"
+              onClick={undoInferred}
+            >
+              Undo these filters
+            </Button>
+          </>
+        ) : null}
+
+        {activeFilters.map((f) => {
+          const auto = inferredKeys.includes(f.key);
+          return (
+            <button
+              key={f.key}
+              type="button"
+              onClick={f.clear}
+              aria-label={`Remove filter: ${f.label}${auto ? " (from your search)" : ""}`}
+              className={cn(
+                "min-h-11 rounded-nav-pill px-3 text-chip text-nav-ink outline-none focus-visible:ring-2 focus-visible:ring-nav-focus focus-visible:ring-offset-2",
+                auto
+                  ? "border border-dashed border-nav-active bg-nav-active-wash"
+                  : "bg-nav-active-wash",
+              )}
+            >
+              {f.label} ✕
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex gap-8">

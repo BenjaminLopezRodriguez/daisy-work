@@ -9,6 +9,7 @@ import {
 } from "@/server/api/trpc";
 import { db } from "@/server/db";
 import { evidence, submissions, users, workOrders } from "@/server/db/schema";
+import { parseSearchFilters } from "@/server/orchestrator/search-filters";
 import {
   createDbWorkOrderService,
   mapUser,
@@ -286,6 +287,15 @@ export const workRouter = createTRPCRouter({
 });
 
 export const orchestratorRouter = createTRPCRouter({
+  /**
+   * Turns a plain-language search into filters. Public because browsing is.
+   * Always resolves to something usable — falls back to a keyword heuristic
+   * when the model is unavailable, and reports which was used.
+   */
+  parseSearchFilters: publicProcedure
+    .input(z.object({ query: z.string().trim().min(1).max(300) }))
+    .mutation(async ({ input }) => parseSearchFilters(input.query)),
+
   planAndDraft: protectedProcedure
     .input(z.object({ message: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {

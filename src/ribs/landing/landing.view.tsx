@@ -5,14 +5,25 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { MapPin, Search } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { AdSlot } from "@/components/daisy/ad-slot";
-import { BudgetType, formatMoney } from "@/domain";
+import { BudgetType, formatMoney, WorkMode } from "@/domain";
 import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
+
+/** What Daisy read out of a plain-language search. Money is integer cents. */
+type AppliedFilters = {
+  q?: string;
+  cat?: string;
+  mode?: "remote" | "on_site" | "hybrid";
+  min?: number;
+  max?: number;
+  sort?: "recent" | "price_asc" | "price_desc";
+};
 
 /** How the job's price reads on a card. Amounts are integer cents. */
 function priceLabel(job: {
@@ -31,6 +42,8 @@ export function LandingView() {
   const [prompt, setPrompt] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
+  /** Filters Daisy read out of the last search. Shown as chips, always clearable. */
+  const [applied, setApplied] = useState<AppliedFilters | null>(null);
 
   const { data: allJobs = [], isLoading } = api.work.browse.useQuery(
     searchQuery ? { q: searchQuery } : undefined,
@@ -47,10 +60,61 @@ export function LandingView() {
       .slice(0, 8);
   }, [allJobs]);
 
-  const jobs = useMemo(
-    () => (category ? allJobs.filter((j) => j.category === category) : allJobs),
-    [allJobs, category],
-  );
+  const jobs = useMemo(() => {
+    let list = category
+      ? allJobs.filter((j) => j.category === category)
+      : allJobs;
+
+    if (applied?.mode) {
+      const want =
+        applied.mode === "remote"
+          ? WorkMode.Remote
+          : applied.mode === "hybrid"
+            ? WorkMode.Hybrid
+            : WorkMode.OnSite;
+      list = list.filter((j) => j.workMode === want);
+    }
+    if (applied?.min !== undefined) {
+      list = list.filter((j) => j.budgetAmount >= applied.min!);
+    }
+    if (applied?.max !== undefined) {
+      list = list.filter((j) => j.budgetAmount <= applied.max!);
+    }
+    if (applied?.sort === "price_asc") {
+      list = [...list].sort((a, b) => a.budgetAmount - b.budgetAmount);
+    } else if (applied?.sort === "price_desc") {
+      list = [...list].sort((a, b) => b.budgetAmount - a.budgetAmount);
+    }
+    return list;
+  }, [allJobs, category, applied]);
+
+  /** Chips for what Daisy inferred, so it is visible and reversible. */
+  const appliedChips = useMemo(() => {
+    if (!applied) return [];
+    const chips: { key: keyof AppliedFilters; label: string }[] = [];
+    if (applied.cat) chips.push({ key: "cat", label: applied.cat });
+    if (applied.mode) {
+      chips.push({
+        key: "mode",
+        label: applied.mode === "on_site" ? "On site" : applied.mode === "hybrid" ? "Hybrid" : "Remote",
+      });
+    }
+    if (applied.min !== undefined)
+      chips.push({ key: "min", label: `Over ${formatMoney(applied.min, "USD")}` });
+    if (applied.max !== undefined)
+      chips.push({ key: "max", label: `Under ${formatMoney(applied.max, "USD")}` });
+    if (applied.sort && applied.sort !== "recent")
+      chips.push({
+        key: "sort",
+        label: applied.sort === "price_asc" ? "Lowest price" : "Highest price",
+      });
+    return chips;
+  }, [applied]);
+
+  const dropFilter = (key: keyof AppliedFilters) => {
+    if (key === "cat") setCategory(null);
+    setApplied((prev) => (prev ? { ...prev, [key]: undefined } : prev));
+  };
 
   const filteredHint = useMemo(() => {
     if (searchQuery.trim()) {
@@ -66,9 +130,37 @@ export function LandingView() {
     router.push(`/create?q=${encodeURIComponent(text)}`);
   };
 
-  const searchJobs = () => {
-    setSearchQuery(prompt.trim());
+  // Search answers on this page. Daisy reads filters out of the query and they
+  // land on the grid below — no second screen, no filter form to fill in.
+  const parse = api.orchestrator.parseSearchFilters.useMutation();
+
+  const searchJobs = async () => {
+    const raw = prompt.trim();
+    if (!raw) return;
+
+    setSearchQuery(raw);
     setCategory(null);
+    setApplied(null);
+
+    try {
+      const { filters } = await parse.mutateAsync({ query: raw.slice(0, 300) });
+      setSearchQuery(filters.q ?? raw);
+      if (filters.cat) setCategory(filters.cat);
+      setApplied(filters);
+    } catch {
+      // Search must always do something: fall back to the plain text search
+      // that is already running from setSearchQuery above.
+      toast.error("Could not read filters from your search", {
+        description: "Showing text matches instead.",
+      });
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setPrompt("");
+    setCategory(null);
+    setApplied(null);
   };
 
   // Airbnb's collapsing search: once the hero box scrolls away, a compact
@@ -192,10 +284,12 @@ export function LandingView() {
                 type="button"
                 variant="outline"
                 className="min-h-10 gap-1.5"
-                onClick={searchJobs}
+                onClick={() => void searchJobs()}
+                disabled={parse.isPending || prompt.trim().length === 0}
+                aria-busy={parse.isPending}
               >
                 <Search className="size-4" aria-hidden />
-                Search
+                {parse.isPending ? "Searching…" : "Search"}
               </Button>
               <Button
                 type="submit"
@@ -221,20 +315,34 @@ export function LandingView() {
               </p>
             </div>
             {searchQuery ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearchQuery("");
-                  setPrompt("");
-                  setCategory(null);
-                }}
-              >
+              <Button type="button" variant="ghost" size="sm" onClick={clearSearch}>
                 Clear search
               </Button>
             ) : null}
           </div>
+
+          {appliedChips.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                Daisy read from your search:
+              </span>
+              {appliedChips.map((chip) => (
+                <button
+                  key={chip.key}
+                  type="button"
+                  onClick={() => dropFilter(chip.key)}
+                  className={cn(
+                    "inline-flex min-h-8 items-center gap-1 rounded-full border border-dashed border-border px-3 text-xs font-medium",
+                    "hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  )}
+                  aria-label={`Remove filter ${chip.label}`}
+                >
+                  {chip.label}
+                  <span aria-hidden>×</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
 
           {categories.length > 1 ? (
             <div
