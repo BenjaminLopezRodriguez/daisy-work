@@ -11,6 +11,7 @@ import {
   listApplicationsForJob,
 } from "@/server/services/db/application";
 import { notify } from "@/server/services/notify";
+import { claimAdAttribution } from "@/server/services/payments";
 
 const workOrderIdInput = z.object({ workOrderId: z.string().uuid() });
 
@@ -93,6 +94,14 @@ export const applicationRouter = createTRPCRouter({
           code: "BAD_REQUEST",
           message: "This job already has someone assigned",
         });
+
+      // An ad that produced this hire is billable now. Recorded here, settled
+      // out of the payout at release — never charged to a card that can fail.
+      await claimAdAttribution({
+        workOrderId: accepted.workOrderId,
+        customerUserId: userId,
+        providerUserId: accepted.applicantId,
+      }).catch((error) => console.error("[ads] attribution failed", error));
 
       await notify({
         userId: accepted.applicantId,

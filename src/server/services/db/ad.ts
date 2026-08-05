@@ -3,7 +3,8 @@ import "server-only";
 import { and, desc, eq, gte, isNull, lte, or, sql } from "drizzle-orm";
 
 import { db } from "@/server/db";
-import { advertisements } from "@/server/db/schema";
+import { adAttributions, advertisements } from "@/server/db/schema";
+import { rankAds } from "@/server/services/ads/auction";
 
 export type AdPlacement = "landing" | "marketplace" | "work_feed";
 export type AdAdvertiserType = "worker" | "company";
@@ -22,6 +23,10 @@ export type Advertisement = {
   status: "active" | "paused";
   impressionCount: number;
   clickCount: number;
+  costPerHireCents: number;
+  budgetCents: number;
+  spentCents: number;
+  hireCount: number;
   createdAt: Date;
 };
 
@@ -40,6 +45,10 @@ function mapRow(row: typeof advertisements.$inferSelect): Advertisement {
     status: row.status,
     impressionCount: row.impressionCount,
     clickCount: row.clickCount,
+    costPerHireCents: row.costPerHireCents,
+    budgetCents: row.budgetCents,
+    spentCents: row.spentCents,
+    hireCount: row.hireCount,
     createdAt: row.createdAt,
   };
 }
@@ -60,10 +69,12 @@ export async function listActiveAds(
         or(isNull(advertisements.endsAt), gte(advertisements.endsAt, now)),
       ),
     )
+    // Over-fetch: the auction, not the database, decides the final order and
+    // drops anything that can no longer pay for a hire.
     .orderBy(desc(advertisements.createdAt))
-    .limit(limit);
+    .limit(limit * 4);
 
-  return rows.map(mapRow);
+  return rankAds(rows.map(mapRow), limit);
 }
 
 export type CreateAdInput = {
@@ -76,6 +87,10 @@ export type CreateAdInput = {
   ctaLabel: string;
   ctaUrl: string;
   placement: AdPlacement;
+  /** Integer cents. What a hire from this ad is worth to the advertiser. */
+  costPerHireCents: number;
+  /** Integer cents. Total spend cap before the ad auto-pauses. */
+  budgetCents: number;
 };
 
 export async function createAd(input: CreateAdInput): Promise<Advertisement> {
@@ -91,6 +106,8 @@ export async function createAd(input: CreateAdInput): Promise<Advertisement> {
       ctaLabel: input.ctaLabel,
       ctaUrl: input.ctaUrl,
       placement: input.placement,
+      costPerHireCents: input.costPerHireCents,
+      budgetCents: input.budgetCents,
       status: "active",
     })
     .returning();
@@ -102,6 +119,8 @@ export async function createAd(input: CreateAdInput): Promise<Advertisement> {
 export type UpdateAdInput = {
   id: string;
   ownerUserId: string;
+  costPerHireCents?: number;
+  budgetCents?: number;
   companyName?: string | null;
   headline?: string;
   body?: string;
@@ -169,4 +188,28 @@ export async function recordAdClick(id: string): Promise<void> {
     .update(advertisements)
     .set({ clickCount: sql`${advertisements.clickCount} + 1` })
     .where(eq(advertisements.id, id));
+}
+
+/**
+ * Record who clicked, so a later hire of the same advertiser can be billed to
+ * this ad. Self-clicks are ignored — an advertiser cannot bill themselves, and
+ * would have no reason to other than to game their own conversion rate.
+ */
+export async function recordAdAttribution(
+  advertisementId: string,
+  viewerUserId: string,
+): Promise<void> {
+  const [ad] = await db
+    .select({ ownerUserId: advertisements.ownerUserId })
+    .from(advertisements)
+    .where(eq(advertisements.id, advertisementId))
+    .limit(1);
+
+  if (!ad?.ownerUserId || ad.ownerUserId === viewerUserId) return;
+
+  await db.insert(adAttributions).values({
+    advertisementId,
+    viewerUserId,
+    advertiserUserId: ad.ownerUserId,
+  });
 }

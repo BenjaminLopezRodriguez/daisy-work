@@ -69,7 +69,10 @@ const ROUTES = {
     label: "Account",
     title: "Account",
     icon: UserRound,
-    children: [{ prefix: "/account/ads", title: "Advertise" }],
+    children: [
+      { prefix: "/account/ads", title: "Advertise" },
+      { prefix: "/account/payouts", title: "Payouts" },
+    ],
   },
 } satisfies Record<string, RouteDef>;
 

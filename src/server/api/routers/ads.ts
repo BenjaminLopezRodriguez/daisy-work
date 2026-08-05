@@ -11,6 +11,7 @@ import {
   getAdForUser,
   listActiveAds,
   listAdsForUser,
+  recordAdAttribution,
   recordAdClick,
   recordAdImpressions,
   updateAd,
@@ -34,6 +35,12 @@ const adFields = z.object({
       "Use a full URL or a path starting with /",
     ),
   placement: placementSchema.default("marketplace"),
+  /**
+   * Pay-per-hire: nothing is charged for views or clicks. The bid is also the
+   * auction rank, and the budget is the hard cap.
+   */
+  costPerHireCents: z.number().int().min(100).max(100_000_00),
+  budgetCents: z.number().int().min(100).max(1_000_000_00),
 });
 
 export const adsRouter = createTRPCRouter({
@@ -83,6 +90,8 @@ export const adsRouter = createTRPCRouter({
         ctaLabel: input.ctaLabel,
         ctaUrl: input.ctaUrl,
         placement: input.placement,
+        costPerHireCents: input.costPerHireCents,
+        budgetCents: input.budgetCents,
       });
     }),
 
@@ -128,10 +137,17 @@ export const adsRouter = createTRPCRouter({
       return { ok: true as const };
     }),
 
+  /**
+   * A click is free. It is recorded against the signed-in viewer so that if
+   * they later hire this advertiser, the ad can be billed for the outcome.
+   * Anonymous clicks are counted but not attributable.
+   */
   recordClick: publicProcedure
     .input(z.object({ id: z.string().uuid() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       await recordAdClick(input.id);
+      const viewerId = ctx.session?.user?.id;
+      if (viewerId) await recordAdAttribution(input.id, viewerId);
       return { ok: true as const };
     }),
 });

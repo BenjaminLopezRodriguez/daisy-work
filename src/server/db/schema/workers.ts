@@ -36,6 +36,17 @@ export const workerProfiles = createTable(
     profileViewCount: d.integer().notNull().default(0),
     /** CTA / contact clicks from service cards. */
     profileClickCount: d.integer().notNull().default(0),
+    /**
+     * Stripe Connect Express account. Stripe holds their bank details, tax
+     * forms and identity — we never do.
+     */
+    stripeAccountId: d.varchar({ length: 255 }).unique(),
+    /**
+     * Mirrors `charges_enabled && payouts_enabled` from the account.updated
+     * webhook. Onboarding is multi-step and can stall, so having an account is
+     * not the same as being payable — this is the flag that gates hiring.
+     */
+    payoutsEnabled: d.boolean().notNull().default(false),
     createdAt: d
       .timestamp({ withTimezone: true })
       .$defaultFn(() => new Date())

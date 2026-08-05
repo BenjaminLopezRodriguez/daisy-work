@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { formatMoney } from "@/domain";
+import { EscrowPanel } from "@/components/daisy/escrow-panel";
 import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
 
@@ -90,6 +91,7 @@ export function WorkOrderScreen({ workOrderId }: { workOrderId: string }) {
         requesterId={wo.requesterId}
         assigneeId={wo.assigneeId ?? null}
         status={wo.status}
+        budgetAmount={wo.budgetAmount}
       />
     </AppPage>
   );
@@ -104,11 +106,13 @@ function ApplySection({
   requesterId,
   assigneeId,
   status,
+  budgetAmount,
 }: {
   workOrderId: string;
   requesterId: string;
   assigneeId: string | null;
   status: string;
+  budgetAmount: number;
 }) {
   const mine = api.application.mine.useQuery(undefined, { retry: false });
 
@@ -136,6 +140,16 @@ function ApplySection({
 
   return (
     <>
+      {/* Money is only a question once someone is actually hired. */}
+      {assigneeId && (isOwner || isAssignee) ? (
+        <EscrowPanel
+          workOrderId={workOrderId}
+          amountCents={budgetAmount}
+          isOwner={isOwner}
+          status={status}
+        />
+      ) : null}
+
       {isOwner ? (
         <ApplicantList
           workOrderId={workOrderId}

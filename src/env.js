@@ -20,6 +20,11 @@ export const env = createEnv({
     /** Both unset = notifications stay in-app only. */
     RESEND_API_KEY: z.string().optional(),
     RESEND_EMAIL_DOMAIN: z.string().optional(),
+    /** Payments are optional at build time; the router refuses at call time. */
+    STRIPE_SECRET_KEY: z.string().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    /** Platform cut in basis points. 1000 = 10%. Unset falls back to 10%. */
+    PLATFORM_FEE_BPS: z.string().optional(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -31,7 +36,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    // NEXT_PUBLIC_CLIENTVAR: z.string(),
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
   },
 
   /**
@@ -51,6 +56,11 @@ export const env = createEnv({
     UPLOADTHING_APP_ID: process.env.UPLOADTHING_APP_ID,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_EMAIL_DOMAIN: process.env.RESEND_EMAIL_DOMAIN,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    PLATFORM_FEE_BPS: process.env.PLATFORM_FEE_BPS,
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     NODE_ENV: process.env.NODE_ENV,
   },
   /**

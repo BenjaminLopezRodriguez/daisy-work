@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useAppSession } from "@/lib/daisy/session";
 import { isWorker } from "@/lib/daisy/role";
+import { formatMoney } from "@/domain";
 import { api } from "@/trpc/react";
 
 type Placement = "landing" | "marketplace" | "work_feed";
@@ -43,6 +44,10 @@ export default function AccountAdsPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [placement, setPlacement] = useState<Placement>("marketplace");
   const [status, setStatus] = useState<"active" | "paused">("active");
+  // Dollars in the form, integer cents on the wire. Money never round-trips
+  // through a float.
+  const [costPerHire, setCostPerHire] = useState("5");
+  const [budget, setBudget] = useState("50");
 
   const { data: myAds = [], refetch } = api.ads.mine.useQuery();
   const { data: editing } = api.ads.byId.useQuery(
@@ -61,6 +66,8 @@ export default function AccountAdsPage() {
     setImageUrl(editing.imageUrl);
     setPlacement(editing.placement);
     setStatus(editing.status);
+    setCostPerHire((editing.costPerHireCents / 100).toString());
+    setBudget((editing.budgetCents / 100).toString());
   }, [editing]);
 
   const create = api.ads.create.useMutation({
@@ -91,38 +98,64 @@ export default function AccountAdsPage() {
     setCtaLabel("Learn more");
     setPlacement("marketplace");
     setStatus("active");
+    setCostPerHire("5");
+    setBudget("50");
     setAdvertiserType(worker ? "worker" : "company");
   }
+
+  const costPerHireCents = Math.round(Number(costPerHire) * 100);
+  const budgetCents = Math.round(Number(budget) * 100);
+  const budgetCoversAHire =
+    Number.isFinite(costPerHireCents) &&
+    Number.isFinite(budgetCents) &&
+    costPerHireCents >= 100 &&
+    budgetCents >= costPerHireCents;
 
   const pending = create.isPending || update.isPending;
   const canSubmit =
     headline.trim().length >= 3 &&
     ctaUrl.trim().length > 0 &&
     (advertiserType !== "company" || companyName.trim().length >= 2) &&
+    budgetCoversAHire &&
     !pending;
 
   const totalImpressions = myAds.reduce((n, a) => n + a.impressionCount, 0);
   const totalClicks = myAds.reduce((n, a) => n + a.clickCount, 0);
+  const totalHires = myAds.reduce((n, a) => n + a.hireCount, 0);
+  const totalSpentCents = myAds.reduce((n, a) => n + a.spentCents, 0);
 
   return (
     <AppPage width="form" className="max-w-xl space-y-8">
       <PageHeader
         title={editId ? "Edit ad" : "Advertise"}
-        description="Create and manage sponsored listings. Reach shows how often your ads were seen and clicked."
+        description="Promote your services. You pay only when an ad leads to an actual hire — views and clicks are free."
       />
 
       {myAds.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="border-border bg-card rounded-xl border p-4">
-            <p className="text-muted-foreground text-xs">Ad impressions</p>
+            <p className="text-muted-foreground text-xs">Views</p>
             <p className="mt-1 text-2xl font-semibold tabular-nums">
               {totalImpressions}
             </p>
           </div>
           <div className="border-border bg-card rounded-xl border p-4">
-            <p className="text-muted-foreground text-xs">Ad clicks</p>
+            <p className="text-muted-foreground text-xs">Clicks</p>
             <p className="mt-1 text-2xl font-semibold tabular-nums">
               {totalClicks}
+            </p>
+          </div>
+          {/* The only two numbers that cost anything. */}
+          <div className="border-border bg-card rounded-xl border p-4">
+            <p className="text-muted-foreground text-xs">Hires</p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums">
+              {totalHires}
+            </p>
+          </div>
+          <div className="border-border bg-card rounded-xl border p-4">
+            <p className="text-muted-foreground text-xs">Spent</p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums">
+              {formatMoney(totalSpentCents, "USD")}
             </p>
           </div>
         </div>
@@ -143,6 +176,8 @@ export default function AccountAdsPage() {
             ctaLabel: ctaLabel.trim() || "Learn more",
             ctaUrl: ctaUrl.trim(),
             placement,
+            costPerHireCents: costPerHireCents,
+            budgetCents: budgetCents,
           };
           if (editId) {
             update.mutate({ id: editId, ...payload, status });
@@ -251,6 +286,62 @@ export default function AccountAdsPage() {
           </div>
         </div>
 
+        {/* Pay-per-hire: the pitch is that views and clicks are free, so the
+            pricing has to say so where the numbers are entered. */}
+        <fieldset className="border-border bg-card space-y-4 rounded-xl border p-4">
+          <legend className="px-1 text-sm font-medium">Budget</legend>
+          <p className="text-muted-foreground text-xs">
+            You are only charged when someone who clicked your ad actually hires
+            you. Views and clicks cost nothing. The fee comes out of that
+            job&rsquo;s payout — there is no separate bill.
+          </p>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="costPerHire">Cost per hire</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm">$</span>
+                <Input
+                  id="costPerHire"
+                  type="number"
+                  inputMode="decimal"
+                  min={1}
+                  step={1}
+                  value={costPerHire}
+                  onChange={(e) => setCostPerHire(e.target.value)}
+                  className="h-11"
+                />
+              </div>
+              <p className="text-muted-foreground text-xs">
+                Higher bids rank higher, but an ad that converts beats one that
+                only bids.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="budget">Total budget</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm">$</span>
+                <Input
+                  id="budget"
+                  type="number"
+                  inputMode="decimal"
+                  min={1}
+                  step={1}
+                  value={budget}
+                  onChange={(e) => setBudget(e.target.value)}
+                  className="h-11"
+                />
+              </div>
+              <p className="text-muted-foreground text-xs">
+                {budgetCoversAHire
+                  ? `Pauses automatically after about ${Math.floor(budgetCents / costPerHireCents)} hires.`
+                  : "Must be at least one hire's worth."}
+              </p>
+            </div>
+          </div>
+        </fieldset>
+
         <div className="space-y-2">
           <Label htmlFor="ctaUrl">Link URL</Label>
           <Input
@@ -332,7 +423,8 @@ export default function AccountAdsPage() {
                   <p className="font-medium">{ad.headline}</p>
                   <p className="text-muted-foreground text-xs capitalize">
                     {ad.placement.replace("_", " ")} · {ad.status} ·{" "}
-                    {ad.impressionCount} views · {ad.clickCount} clicks
+                    {ad.impressionCount} views · {ad.clickCount} clicks ·{" "}
+                    {ad.hireCount} {ad.hireCount === 1 ? "hire" : "hires"}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Button asChild size="sm" variant="outline">

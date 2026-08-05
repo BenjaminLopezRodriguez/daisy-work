@@ -26,6 +26,8 @@ export const users = createTable(
      * null = never asked. "hire" | "provide".
      */
     onboardingChoice: d.varchar({ length: 16 }),
+    /** Reused across hires so returning customers keep their saved cards. */
+    stripeCustomerId: d.varchar({ length: 255 }).unique(),
     identityStatus: identityStatusEnum("identity_status")
       .notNull()
       .default("unverified"),

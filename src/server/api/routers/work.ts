@@ -21,6 +21,11 @@ import {
 import { createOrchestratorModel } from "@/server/orchestrator/model/deepseek-orchestrator-model";
 import { createDraftFromPlan } from "@/server/orchestrator";
 import { notify } from "@/server/services/notify";
+import {
+  claimAdAttribution,
+  refundEscrow,
+  releaseEscrow,
+} from "@/server/services/payments";
 import { workPlanSchema } from "@/server/orchestrator/orchestrator.types";
 
 /** Loads a work order the given user owns, or throws. */
@@ -138,6 +143,9 @@ export const workRouter = createTRPCRouter({
         .returning();
       if (!row) throw new TRPCError({ code: "NOT_FOUND" });
 
+      // Held funds go back. A cancelled job must never sit on someone's money.
+      await refundEscrow(row.id);
+
       if (row.assigneeId) {
         await notify({
           userId: row.assigneeId,
@@ -167,6 +175,10 @@ export const workRouter = createTRPCRouter({
           code: "BAD_REQUEST",
           message: "Nobody is assigned to this job yet",
         });
+
+      // Money first: if the transfer fails, the job must not read as approved
+      // while the provider is unpaid.
+      await releaseEscrow(wo.id);
 
       await ctx.db
         .update(workOrders)
@@ -243,6 +255,12 @@ export const workRouter = createTRPCRouter({
         assigneeId: listing.ownerUserId,
         assigneeType: "human",
       });
+
+      await claimAdAttribution({
+        workOrderId: assigned.id,
+        customerUserId: userId,
+        providerUserId: listing.ownerUserId,
+      }).catch((error) => console.error("[ads] attribution failed", error));
 
       await notify({
         userId: listing.ownerUserId,

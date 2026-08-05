@@ -122,6 +122,9 @@ export function AccountMenuBody({
       <DropdownMenuItem asChild className="min-h-11">
         <Link href="/account/ads">Advertise</Link>
       </DropdownMenuItem>
+      <DropdownMenuItem asChild className="min-h-11">
+        <Link href="/account/payouts">Payouts</Link>
+      </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuItem
         className="min-h-11"
@@ -167,6 +170,13 @@ export function AccountDrawerBody({
           className="focus-visible:ring-nav-focus flex min-h-14 items-center px-4 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
         >
           Advertise
+        </Link>
+        <Link
+          href="/account/payouts"
+          onClick={onNavigate}
+          className="focus-visible:ring-nav-focus flex min-h-14 items-center px-4 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+        >
+          Payouts
         </Link>
         <button
           type="button"

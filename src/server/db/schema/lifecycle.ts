@@ -128,6 +128,16 @@ export const payments = createTable(
     currency: d.varchar({ length: 3 }).notNull().default("USD"),
     status: paymentStatusEnum("status").notNull().default("pending"),
     idempotencyKey: d.varchar({ length: 128 }).unique(),
+    /**
+     * Stripe is the source of truth for money; these are our handles on it.
+     * The intent is captured at hire (funds held by the platform) and the
+     * transfer is what moves them to the provider at approval.
+     */
+    stripePaymentIntentId: d.varchar({ length: 255 }).unique(),
+    stripeTransferId: d.varchar({ length: 255 }),
+    stripeRefundId: d.varchar({ length: 255 }),
+    /** Our cut, in the same integer cents as `amount`. Never a float. */
+    platformFeeAmount: d.integer().notNull().default(0),
     authorizedAt: d.timestamp({ withTimezone: true }),
     releasedAt: d.timestamp({ withTimezone: true }),
     createdAt: d

@@ -1,6 +1,7 @@
 import { adsRouter } from "@/server/api/routers/ads";
 import { applicationRouter } from "@/server/api/routers/application";
 import { notificationRouter } from "@/server/api/routers/notification";
+import { paymentRouter } from "@/server/api/routers/payment";
 import { postRouter } from "@/server/api/routers/post";
 import { providerRouter } from "@/server/api/routers/provider";
 import { reviewRouter } from "@/server/api/routers/review";
@@ -23,6 +24,7 @@ export const appRouter = createTRPCRouter({
   ads: adsRouter,
   notification: notificationRouter,
   review: reviewRouter,
+  payment: paymentRouter,
 });
 
 // export type definition of API
