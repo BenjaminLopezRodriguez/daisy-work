@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 
 import {
@@ -8,6 +9,10 @@ import {
   PageHeader,
   WorkStatusBadge,
 } from "@/components/daisy";
+import {
+  DocumentUpload,
+  type UploadedDoc,
+} from "@/components/daisy/uploads/document-upload";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@/domain";
@@ -72,6 +77,7 @@ export function WorkOrderScreen({ workOrderId }: { workOrderId: string }) {
       </section>
 
       <ApplySection workOrderId={wo.id} requesterId={wo.requesterId} />
+      <DeliverableSection workOrderId={wo.id} />
     </AppPage>
   );
 }
@@ -177,6 +183,46 @@ function ApplicantList({ workOrderId }: { workOrderId: string }) {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+function DeliverableSection({ workOrderId }: { workOrderId: string }) {
+  const [docs, setDocs] = useState<UploadedDoc[]>([]);
+  const submit = api.work.submitEvidence.useMutation({
+    onSuccess: () => setDocs([]),
+  });
+
+  return (
+    <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+      <h2 className="text-sm font-medium">Submit deliverables</h2>
+      <p className="text-xs text-muted-foreground">
+        Upload photos or documents for this job.
+      </p>
+      <DocumentUpload value={docs} onChange={setDocs} label="Files" />
+      <Button
+        type="button"
+        className="min-h-10"
+        disabled={docs.length === 0 || submit.isPending}
+        onClick={() =>
+          submit.mutate({
+            workOrderId,
+            files: docs.map((d) => ({
+              url: d.url,
+              name: d.name,
+              key: d.key,
+            })),
+          })
+        }
+      >
+        {submit.isPending ? "Submitting…" : "Submit files"}
+      </Button>
+      {submit.isSuccess ? (
+        <p className="text-sm text-muted-foreground">Files submitted.</p>
+      ) : null}
+      {submit.error ? (
+        <p className="text-sm text-destructive">{submit.error.message}</p>
+      ) : null}
     </section>
   );
 }

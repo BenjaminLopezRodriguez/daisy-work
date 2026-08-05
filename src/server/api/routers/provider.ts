@@ -1,7 +1,11 @@
-import { eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "@/server/api/trpc";
 import { db } from "@/server/db";
 import { users, workerProfiles } from "@/server/db/schema";
 
@@ -15,6 +19,7 @@ const profileInput = z.object({
   workModes: z.array(z.enum(workModeValues)).min(1).max(4),
   hourlyRateCents: z.number().int().min(0).max(100_000_00).nullable(),
   location: z.string().trim().max(256).optional(),
+  coverImageUrl: z.string().url().nullable().optional(),
 });
 
 export const providerRouter = createTRPCRouter({
@@ -36,6 +41,113 @@ export const providerRouter = createTRPCRouter({
       profile: profile ?? null,
     };
   }),
+
+  /** Own reach stats for account dashboard. */
+  myReach: protectedProcedure.query(async ({ ctx }) => {
+    const [profile] = await db
+      .select({
+        profileViewCount: workerProfiles.profileViewCount,
+        profileClickCount: workerProfiles.profileClickCount,
+        headline: workerProfiles.headline,
+        coverImageUrl: workerProfiles.coverImageUrl,
+      })
+      .from(workerProfiles)
+      .where(eq(workerProfiles.userId, ctx.session.user.id))
+      .limit(1);
+    return profile ?? null;
+  }),
+
+  /** Public marketplace directory of providers. */
+  listPublic: publicProcedure
+    .input(z.object({ limit: z.number().int().min(1).max(48).optional() }).optional())
+    .query(async ({ input }) => {
+      const rows = await db
+        .select({
+          id: workerProfiles.id,
+          userId: workerProfiles.userId,
+          headline: workerProfiles.headline,
+          biography: workerProfiles.biography,
+          serviceAreas: workerProfiles.serviceAreas,
+          workModes: workerProfiles.workModes,
+          hourlyRate: workerProfiles.hourlyRate,
+          location: workerProfiles.location,
+          coverImageUrl: workerProfiles.coverImageUrl,
+          name: users.name,
+          avatar: users.avatar,
+          image: users.image,
+        })
+        .from(workerProfiles)
+        .innerJoin(users, eq(users.id, workerProfiles.userId))
+        .orderBy(desc(workerProfiles.updatedAt))
+        .limit(input?.limit ?? 24);
+
+      return rows.map((r) => ({
+        id: r.id,
+        userId: r.userId,
+        headline: r.headline,
+        biography: r.biography,
+        serviceAreas: r.serviceAreas,
+        workModes: r.workModes,
+        hourlyRate: r.hourlyRate,
+        location: r.location,
+        coverImageUrl: r.coverImageUrl,
+        name: r.name,
+        avatar: r.avatar ?? r.image,
+      }));
+    }),
+
+  byId: publicProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const [row] = await db
+        .select({
+          id: workerProfiles.id,
+          userId: workerProfiles.userId,
+          headline: workerProfiles.headline,
+          biography: workerProfiles.biography,
+          serviceAreas: workerProfiles.serviceAreas,
+          workModes: workerProfiles.workModes,
+          hourlyRate: workerProfiles.hourlyRate,
+          location: workerProfiles.location,
+          coverImageUrl: workerProfiles.coverImageUrl,
+          name: users.name,
+          avatar: users.avatar,
+          image: users.image,
+        })
+        .from(workerProfiles)
+        .innerJoin(users, eq(users.id, workerProfiles.userId))
+        .where(eq(workerProfiles.id, input.id))
+        .limit(1);
+      if (!row) return null;
+      return {
+        ...row,
+        avatar: row.avatar ?? row.image,
+      };
+    }),
+
+  recordView: publicProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ input }) => {
+      await db
+        .update(workerProfiles)
+        .set({
+          profileViewCount: sql`${workerProfiles.profileViewCount} + 1`,
+        })
+        .where(eq(workerProfiles.id, input.id));
+      return { ok: true as const };
+    }),
+
+  recordClick: publicProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ input }) => {
+      await db
+        .update(workerProfiles)
+        .set({
+          profileClickCount: sql`${workerProfiles.profileClickCount} + 1`,
+        })
+        .where(eq(workerProfiles.id, input.id));
+      return { ok: true as const };
+    }),
 
   /** Records the answer to the one question we ask after first sign-in. */
   setIntent: protectedProcedure
@@ -60,6 +172,9 @@ export const providerRouter = createTRPCRouter({
         workModes: input.workModes,
         hourlyRate: input.hourlyRateCents,
         location: input.location ?? null,
+        ...(input.coverImageUrl !== undefined
+          ? { coverImageUrl: input.coverImageUrl }
+          : {}),
       };
 
       const [row] = await db
@@ -71,7 +186,6 @@ export const providerRouter = createTRPCRouter({
         })
         .returning();
 
-      // Setting up a profile is itself the answer to the intent question.
       await db
         .update(users)
         .set({ onboardingChoice: "provide" })

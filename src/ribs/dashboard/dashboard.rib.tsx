@@ -38,7 +38,7 @@ export function DashboardView() {
             Hi, {first}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Post a job or open work in progress.
+            Describe what you need — Daisy matches services for you.
           </p>
         </div>
 
@@ -59,8 +59,8 @@ export function DashboardView() {
               }
             }}
             rows={3}
-            placeholder="Describe the job you need done…"
-            aria-label="Describe the job"
+            placeholder="Describe what you need done…"
+            aria-label="Describe what you need"
             className="min-h-20 resize-none border-0 bg-transparent p-1 shadow-none focus-visible:ring-0"
           />
           <div className="flex justify-end pt-2">
@@ -70,7 +70,7 @@ export function DashboardView() {
               className="gap-1.5"
               disabled={prompt.trim().length === 0}
             >
-              Post a job
+              Find matches
               <ArrowUp className="size-3.5" aria-hidden />
             </Button>
           </div>

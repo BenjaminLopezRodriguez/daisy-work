@@ -8,7 +8,10 @@ export default async function ProviderOnboardingPage() {
   const session = await auth();
   if (!session?.user) redirect("/signin");
 
-  const { profile } = await api.provider.status();
+  const [{ profile }, me] = await Promise.all([
+    api.provider.status(),
+    api.me.get(),
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-lg px-4 py-10 sm:px-6 sm:py-16">
@@ -31,9 +34,12 @@ export default async function ProviderOnboardingPage() {
                 workModes: profile.workModes,
                 hourlyRateCents: profile.hourlyRate,
                 location: profile.location ?? "",
+                coverImageUrl: profile.coverImageUrl ?? null,
+                avatarUrl: me?.avatar ?? null,
               }
             : null
         }
+        initialAvatarUrl={me?.avatar ?? null}
       />
     </main>
   );

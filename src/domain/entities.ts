@@ -33,6 +33,7 @@ export type User = {
   identityStatus: IdentityStatus;
   trustLevel: number;
   createdAt: Date;
+  onboardingChoice: "hire" | "provide" | null;
 };
 
 export type Organization = {

@@ -11,21 +11,27 @@ const OPTIONS = [
     choice: "hire" as const,
     icon: Briefcase,
     title: "I need something done",
-    body: "Describe a job, publish it, and pick who does it.",
+    body: "Marketplace to post jobs, browse talent, and hire.",
   },
   {
     choice: "provide" as const,
     icon: Wrench,
-    title: "I want to provide services",
-    body: "Set up a profile so people can find you and hire you.",
+    title: "I want to find work",
+    body: "Work dashboard to browse open jobs and track applications.",
   },
 ];
 
 export function WelcomeChoice() {
   const router = useRouter();
+  const { data: status } = api.provider.status.useQuery();
   const setIntent = api.provider.setIntent.useMutation({
     onSuccess: ({ choice }) => {
-      router.push(choice === "provide" ? "/onboarding/provider" : "/home");
+      if (choice === "provide") {
+        router.push(status?.profile ? "/work" : "/onboarding/provider");
+      } else {
+        router.push("/home");
+      }
+      router.refresh();
     },
   });
 

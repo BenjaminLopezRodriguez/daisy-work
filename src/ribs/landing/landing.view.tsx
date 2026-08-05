@@ -9,6 +9,7 @@ import { MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { AdSlot } from "@/components/daisy/ad-slot";
 import { BudgetType, formatMoney } from "@/domain";
 import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
@@ -78,10 +79,10 @@ export function LandingView() {
         </Link>
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm">
-            <Link href="/home">Sign in</Link>
+            <Link href="/signin">Sign in</Link>
           </Button>
           <Button asChild size="sm">
-            <Link href="/create">Post a job</Link>
+            <Link href="/create">Get started</Link>
           </Button>
         </div>
       </header>
@@ -90,7 +91,7 @@ export function LandingView() {
         <section className="mx-auto w-full max-w-2xl space-y-5 text-center">
           <div className="space-y-2">
             <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              Describe a job. Daisy writes the posting.
+              Describe what you need. Daisy finds the match.
             </h1>
             <p className="text-sm text-muted-foreground text-pretty sm:text-base">
               Say what you need in plain words. You review it, publish it, and
@@ -139,6 +140,8 @@ export function LandingView() {
             </div>
           </form>
         </section>
+
+        <AdSlot placement="landing" title="Featured partners" />
 
         <section className="space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-2">

@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
+import { ImageCropUpload } from "@/components/daisy/uploads/image-crop-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +28,8 @@ export type ProviderProfileInitial = {
   workModes: WorkMode[];
   hourlyRateCents: number | null;
   location: string;
+  coverImageUrl: string | null;
+  avatarUrl: string | null;
 };
 
 /** Dollars in the input, integer cents in the database. */
@@ -39,10 +43,13 @@ function toCents(input: string): number | null {
 
 export function ProviderProfileForm({
   initial,
+  initialAvatarUrl,
 }: {
   initial: ProviderProfileInitial | null;
+  initialAvatarUrl?: string | null;
 }) {
   const router = useRouter();
+  const utils = api.useUtils();
   const [headline, setHeadline] = useState(initial?.headline ?? "");
   const [biography, setBiography] = useState(initial?.biography ?? "");
   const [services, setServices] = useState(
@@ -57,11 +64,23 @@ export function ProviderProfileForm({
       : "",
   );
   const [location, setLocation] = useState(initial?.location ?? "");
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(
+    initial?.coverImageUrl ?? null,
+  );
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(
+    initial?.avatarUrl ?? initialAvatarUrl ?? null,
+  );
 
   const save = api.provider.upsertProfile.useMutation({
     onSuccess: () => {
-      router.push("/account");
+      router.push("/services");
       router.refresh();
+    },
+  });
+
+  const updateAvatar = api.me.updateAvatar.useMutation({
+    onSuccess: async () => {
+      await utils.me.get.invalidate();
     },
   });
 
@@ -92,9 +111,29 @@ export function ProviderProfileForm({
           workModes,
           hourlyRateCents: toCents(rate),
           location: location.trim() || undefined,
+          coverImageUrl,
         });
       }}
     >
+      <ImageCropUpload
+        endpoint="profileImage"
+        aspect="square"
+        label="Profile photo"
+        value={avatarUrl}
+        onChange={(url) => {
+          setAvatarUrl(url);
+          updateAvatar.mutate({ avatarUrl: url });
+        }}
+      />
+
+      <ImageCropUpload
+        endpoint="serviceImage"
+        aspect="video"
+        label="Service photo"
+        value={coverImageUrl}
+        onChange={setCoverImageUrl}
+      />
+
       <div className="space-y-2">
         <Label htmlFor="headline">What do you do?</Label>
         <Input
@@ -211,7 +250,7 @@ export function ProviderProfileForm({
           size="sm"
           className="min-h-10"
         >
-          <a href="/home">Skip for now</a>
+          <Link href="/services">Skip for now</Link>
         </Button>
       </div>
     </form>

@@ -7,6 +7,7 @@ import {
   BudgetType,
   RiskLevel,
   WorkMode,
+  type User,
   type WorkOrder,
   type WorkOrderLocation,
 } from "@/domain";
@@ -95,7 +96,7 @@ function mapWorkOrder(row: typeof workOrders.$inferSelect): WorkOrder {
   };
 }
 
-export function mapUser(row: typeof users.$inferSelect) {
+export function mapUser(row: typeof users.$inferSelect): User {
   const identityStatus =
     row.identityStatus === "pending" ||
     row.identityStatus === "verified" ||
@@ -107,11 +108,15 @@ export function mapUser(row: typeof users.$inferSelect) {
     id: row.id,
     name: row.name,
     email: row.email,
-    avatar: row.avatar,
+    avatar: row.avatar ?? row.image,
     accountType: row.accountType,
     identityStatus,
     trustLevel: row.trustLevel,
     createdAt: row.createdAt,
+    onboardingChoice:
+      row.onboardingChoice === "hire" || row.onboardingChoice === "provide"
+        ? row.onboardingChoice
+        : null,
   };
 }
 

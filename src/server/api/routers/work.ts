@@ -8,11 +8,15 @@ import {
   publicProcedure,
 } from "@/server/api/trpc";
 import { db } from "@/server/db";
-import { users, workOrders } from "@/server/db/schema";
+import { evidence, submissions, users, workOrders } from "@/server/db/schema";
 import {
   createDbWorkOrderService,
   mapUser,
 } from "@/server/services/db/work-order";
+import {
+  getServiceById,
+  recordServiceClick,
+} from "@/server/services/db/service-listing";
 import { createOrchestratorModel } from "@/server/orchestrator/model/deepseek-orchestrator-model";
 import { createDraftFromPlan } from "@/server/orchestrator";
 import { workPlanSchema } from "@/server/orchestrator/orchestrator.types";
@@ -40,6 +44,18 @@ export const meRouter = createTRPCRouter({
       .limit(1);
     return row ? mapUser(row) : null;
   }),
+
+  updateAvatar: protectedProcedure
+    .input(z.object({ avatarUrl: z.string().url() }))
+    .mutation(async ({ ctx, input }) => {
+      const [row] = await db
+        .update(users)
+        .set({ avatar: input.avatarUrl, image: input.avatarUrl })
+        .where(eq(users.id, ctx.session.user.id))
+        .returning();
+      if (!row) throw new TRPCError({ code: "NOT_FOUND" });
+      return mapUser(row);
+    }),
 });
 
 export const workRouter = createTRPCRouter({
@@ -120,6 +136,152 @@ export const workRouter = createTRPCRouter({
         .returning();
       if (!row) throw new TRPCError({ code: "NOT_FOUND" });
       return { ok: true as const };
+    }),
+
+  /**
+   * Request a packaged service: publish the draft (if any) and assign the
+   * service owner. Creates a short draft from title/description when no draftId.
+   */
+  requestService: protectedProcedure
+    .input(
+      z.object({
+        serviceListingId: z.string().uuid(),
+        draftId: z.string().uuid().optional(),
+        title: z.string().trim().min(3).max(512).optional(),
+        description: z.string().trim().min(3).optional(),
+        category: z.string().trim().min(1).max(128).optional(),
+        budgetAmount: z.number().int().min(0).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const listing = await getServiceById(input.serviceListingId);
+      if (listing?.status !== "active") {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Service not found" });
+      }
+      if (listing.ownerUserId === userId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You can’t request your own service",
+        });
+      }
+
+      await recordServiceClick(listing.id);
+
+      const services = createDbWorkOrderService();
+      let workOrderId = input.draftId;
+
+      if (workOrderId) {
+        await requireOwnedWorkOrder(workOrderId, userId);
+        await services.publish({ workOrderId });
+      } else {
+        const created = await services.createDraft({
+          title: input.title ?? `Request: ${listing.title}`,
+          description:
+            input.description ??
+            `Requested service: ${listing.title}\n\n${listing.description}`,
+          requesterId: userId,
+          category: input.category ?? listing.tags[0] ?? "general",
+          workMode: "hybrid",
+          budgetAmount: input.budgetAmount ?? listing.priceCents,
+          currency: "USD",
+        });
+        workOrderId = created.id;
+        await services.publish({ workOrderId });
+      }
+
+      const assigned = await services.assign({
+        workOrderId,
+        assigneeId: listing.ownerUserId,
+        assigneeType: "human",
+      });
+
+      return { workOrderId: assigned.id };
+    }),
+
+  /** Attach uploaded deliverable files to a draft submission for this job. */
+  submitEvidence: protectedProcedure
+    .input(
+      z.object({
+        workOrderId: z.string().uuid(),
+        files: z
+          .array(
+            z.object({
+              url: z.string().url(),
+              name: z.string().min(1).max(256),
+              key: z.string().optional(),
+            }),
+          )
+          .min(1)
+          .max(8),
+        notes: z.string().trim().max(2000).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const [wo] = await db
+        .select({ id: workOrders.id })
+        .from(workOrders)
+        .where(eq(workOrders.id, input.workOrderId))
+        .limit(1);
+      if (!wo) throw new TRPCError({ code: "NOT_FOUND" });
+
+      let [submission] = await db
+        .select()
+        .from(submissions)
+        .where(
+          and(
+            eq(submissions.workOrderId, input.workOrderId),
+            eq(submissions.submittedBy, userId),
+            eq(submissions.status, "draft"),
+          ),
+        )
+        .limit(1);
+
+      if (!submission) {
+        [submission] = await db
+          .insert(submissions)
+          .values({
+            workOrderId: input.workOrderId,
+            submittedBy: userId,
+            status: "draft",
+            notes: input.notes ?? "",
+          })
+          .returning();
+      } else if (input.notes) {
+        await db
+          .update(submissions)
+          .set({ notes: input.notes })
+          .where(eq(submissions.id, submission.id));
+      }
+
+      if (!submission) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Could not create submission",
+        });
+      }
+
+      const rows = await db
+        .insert(evidence)
+        .values(
+          input.files.map((file) => {
+            const isImage = /\.(png|jpe?g|gif|webp|avif)$/i.test(file.name);
+            return {
+              submissionId: submission.id,
+              type: isImage ? ("image" as const) : ("document" as const),
+              storageKey: file.key ?? file.url,
+              caption: file.name,
+              metadataJson: JSON.stringify({ url: file.url, name: file.name }),
+            };
+          }),
+        )
+        .returning();
+
+      return {
+        submissionId: submission.id,
+        evidenceIds: rows.map((r) => r.id),
+      };
     }),
 });
 

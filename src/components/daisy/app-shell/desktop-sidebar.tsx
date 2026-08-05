@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Briefcase, Plus, UserRound } from "lucide-react";
 
 import {
   Sidebar,
@@ -15,7 +14,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,21 +23,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { isNavActive, navForRole } from "@/lib/daisy/nav";
 
-const MAIN_NAV = [
-  { href: "/home", label: "Home", icon: Home },
-  { href: "/work", label: "Work", icon: Briefcase },
-  { href: "/create", label: "Post", icon: Plus, emphasize: true },
-  { href: "/account", label: "Account", icon: UserRound },
-] as const;
-
-function isActive(pathname: string, href: string) {
-  if (href === "/home") return pathname === "/home";
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-export function DesktopSidebar({ userName }: { userName: string }) {
+export function DesktopSidebar({
+  userName,
+  userAvatar,
+  onboardingChoice,
+}: {
+  userName: string;
+  userAvatar?: string | null;
+  onboardingChoice: "hire" | "provide" | null;
+}) {
   const pathname = usePathname();
+  const mainNav = navForRole(onboardingChoice);
   const initials = userName
     .split(" ")
     .map((p) => p[0])
@@ -51,8 +48,8 @@ export function DesktopSidebar({ userName }: { userName: string }) {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {MAIN_NAV.map((item) => {
-                const active = isActive(pathname, item.href);
+              {mainNav.map((item) => {
+                const active = isNavActive(pathname, item.href);
                 const Icon = item.icon;
                 return (
                   <SidebarMenuItem key={item.href}>
@@ -61,7 +58,7 @@ export function DesktopSidebar({ userName }: { userName: string }) {
                       isActive={active}
                       tooltip={item.label}
                       className={
-                        "emphasize" in item && item.emphasize && !active
+                        item.emphasize && !active
                           ? "bg-sidebar-primary/10 text-sidebar-primary hover:bg-sidebar-primary/15 hover:text-sidebar-primary"
                           : undefined
                       }
@@ -87,6 +84,9 @@ export function DesktopSidebar({ userName }: { userName: string }) {
               className="flex size-11 w-full items-center justify-center gap-2 rounded-md text-left text-sm outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-11 md:justify-start md:px-2 group-data-[collapsible=icon]:md:justify-center group-data-[collapsible=icon]:md:px-0"
             >
               <Avatar className="size-8 shrink-0">
+                {userAvatar ? (
+                  <AvatarImage src={userAvatar} alt="" />
+                ) : null}
                 <AvatarFallback className="text-xs">{initials}</AvatarFallback>
               </Avatar>
               <span className="truncate group-data-[collapsible=icon]:hidden">
@@ -100,8 +100,13 @@ export function DesktopSidebar({ userName }: { userName: string }) {
             <DropdownMenuItem asChild>
               <Link href="/account">Account</Link>
             </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/account/ads">Advertise</Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled>Sign out (demo)</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/api/auth/signout">Sign out</Link>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarFooter>

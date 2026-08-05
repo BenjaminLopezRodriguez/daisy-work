@@ -15,6 +15,8 @@ export const env = createEnv({
     DEEPSEEK_API_KEY: z.string().optional(),
     DEEPSEEK_BASE_URL: z.string().url().optional(),
     DEEPSEEK_MODEL: z.string().optional(),
+    UPLOADTHING_TOKEN: z.string().min(1),
+    UPLOADTHING_APP_ID: z.string().optional(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -42,6 +44,8 @@ export const env = createEnv({
     DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
     DEEPSEEK_BASE_URL: process.env.DEEPSEEK_BASE_URL,
     DEEPSEEK_MODEL: process.env.DEEPSEEK_MODEL,
+    UPLOADTHING_TOKEN: process.env.UPLOADTHING_TOKEN,
+    UPLOADTHING_APP_ID: process.env.UPLOADTHING_APP_ID,
     NODE_ENV: process.env.NODE_ENV,
   },
   /**

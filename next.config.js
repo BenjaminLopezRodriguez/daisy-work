@@ -10,6 +10,20 @@ const config = {
   devIndicators: {
     position: "bottom-right",
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "sdq4u2xjf9.ufs.sh",
+        pathname: "/f/*",
+      },
+      {
+        protocol: "https",
+        hostname: "utfs.io",
+        pathname: "/**",
+      },
+    ],
+  },
 };
 
 export default config;

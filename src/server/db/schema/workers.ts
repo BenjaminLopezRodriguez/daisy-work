@@ -30,6 +30,12 @@ export const workerProfiles = createTable(
     completedJobs: d.integer().notNull().default(0),
     responseTimeHours: d.integer().notNull().default(24),
     location: d.varchar({ length: 256 }),
+    /** 16:9 service / cover photo (UploadThing URL). */
+    coverImageUrl: d.text(),
+    /** Profile / service card views in marketplace. */
+    profileViewCount: d.integer().notNull().default(0),
+    /** CTA / contact clicks from service cards. */
+    profileClickCount: d.integer().notNull().default(0),
     createdAt: d
       .timestamp({ withTimezone: true })
       .$defaultFn(() => new Date())

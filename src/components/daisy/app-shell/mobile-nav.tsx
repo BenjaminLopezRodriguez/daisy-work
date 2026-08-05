@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Briefcase, Home, Menu, Plus, UserRound } from "lucide-react";
+import { Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,28 +13,20 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { isNavActive, navForRole } from "@/lib/daisy/nav";
 import { cn } from "@/lib/utils";
-
-const TABS = [
-  { href: "/home", label: "Home", icon: Home },
-  { href: "/work", label: "Work", icon: Briefcase },
-  { href: "/create", label: "Post", icon: Plus },
-  { href: "/account", label: "Account", icon: UserRound },
-] as const;
-
-function isActive(pathname: string, href: string) {
-  if (href === "/home") return pathname === "/home";
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
 
 export function MobileHeader({
   title,
   userName,
+  onboardingChoice,
 }: {
   title?: string;
   userName: string;
+  onboardingChoice: "hire" | "provide" | null;
 }) {
   const pathname = usePathname();
+  const tabs = navForRole(onboardingChoice);
 
   return (
     <header className="sticky top-0 z-[var(--app-z-chrome)] flex h-14 items-center gap-2 border-b border-border bg-card/95 px-3 backdrop-blur md:hidden">
@@ -61,9 +53,9 @@ export function MobileHeader({
           </SheetHeader>
           <nav className="flex-1 overflow-y-auto p-2" aria-label="Primary">
             <ul className="space-y-0.5">
-              {TABS.map((item) => {
+              {tabs.map((item) => {
                 const Icon = item.icon;
-                const active = isActive(pathname, item.href);
+                const active = isNavActive(pathname, item.href);
                 return (
                   <li key={item.href}>
                     <SheetClose asChild>
@@ -98,8 +90,14 @@ export function MobileHeader({
   );
 }
 
-export function MobileBottomNav() {
+export function MobileBottomNav({
+  onboardingChoice,
+}: {
+  onboardingChoice: "hire" | "provide" | null;
+}) {
   const pathname = usePathname();
+  const tabs = navForRole(onboardingChoice);
+  const cols = tabs.length;
 
   return (
     <nav
@@ -111,9 +109,12 @@ export function MobileBottomNav() {
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
-      <ul className="grid h-[var(--mobile-nav-height)] grid-cols-4">
-        {TABS.map((tab) => {
-          const active = isActive(pathname, tab.href);
+      <ul
+        className="grid h-[var(--mobile-nav-height)]"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+      >
+        {tabs.map((tab) => {
+          const active = isNavActive(pathname, tab.href);
           const Icon = tab.icon;
           return (
             <li key={tab.href}>
