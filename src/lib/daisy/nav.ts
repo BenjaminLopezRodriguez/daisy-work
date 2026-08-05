@@ -54,7 +54,7 @@ const ROUTES = {
   listings: {
     href: "/services",
     label: "My listings",
-    title: "My listings",
+    title: "Your services",
     icon: Package,
   },
   work: {
@@ -78,12 +78,21 @@ const ROUTES = {
 
 const ROUTE_LIST: RouteDef[] = Object.values(ROUTES);
 
-function navItem(route: RouteDef, emphasize = false): NavItem {
+/**
+ * `label` and `href` are overridable per role. The same destination means a
+ * different thing depending on which side of the marketplace you are on, and
+ * the nav has to say which — a provider tapping "Browse" wants open jobs, not
+ * a catalogue of other providers' services.
+ */
+function navItem(
+  route: RouteDef,
+  overrides: { emphasize?: boolean; label?: string; href?: string } = {},
+): NavItem {
   return {
-    href: route.href,
-    label: route.label,
+    href: overrides.href ?? route.href,
+    label: overrides.label ?? route.label,
     icon: route.icon,
-    ...(emphasize ? { emphasize: true } : {}),
+    ...(overrides.emphasize ? { emphasize: true } : {}),
   };
 }
 
@@ -94,20 +103,25 @@ function navItem(route: RouteDef, emphasize = false): NavItem {
 const CUSTOMER_NAV: NavItem[] = [
   navItem(ROUTES.home),
   navItem(ROUTES.browse),
-  navItem(ROUTES.create, true),
+  navItem(ROUTES.create, { emphasize: true }),
   navItem(ROUTES.work),
   navItem(ROUTES.account),
 ];
 
 /**
- * Same five slots as hire mode; `/home` renders a provider-shaped dashboard
- * now that it no longer redirects to `/services`. (§3.2, note on slot 4.)
+ * Same five slots and the same routes as hire mode — only the words and the
+ * default scope change. Browse lands on open jobs because that is what a
+ * provider came to browse for; Requests becomes "My work" because for this
+ * side it means jobs assigned to you and applications you have sent.
  */
 const WORKER_NAV: NavItem[] = [
   navItem(ROUTES.home),
-  navItem(ROUTES.browse),
-  navItem(ROUTES.listings, true),
-  navItem(ROUTES.work),
+  navItem(ROUTES.browse, {
+    label: "Find work",
+    href: "/marketplace?scope=jobs",
+  }),
+  navItem(ROUTES.listings, { emphasize: true, label: "Offer" }),
+  navItem(ROUTES.work, { label: "My work" }),
   navItem(ROUTES.account),
 ];
 
@@ -153,11 +167,24 @@ function matchRoute(
 }
 
 export function isNavActive(pathname: string, href: string): boolean {
-  return matchRoute(pathname)?.route.href === href;
+  // Nav hrefs may carry a default query (`/marketplace?scope=jobs`); the
+  // pathname never does. Compare paths, or the provider's Browse tab renders
+  // inactive on the page it just navigated to.
+  const path = href.split("?")[0];
+  return matchRoute(pathname)?.route.href === path;
 }
 
-export function titleForPath(pathname: string): string {
-  return matchRoute(pathname)?.title ?? "Daisy.work";
+/** Role-aware so the mobile header agrees with the tab bar. */
+export function titleForPath(
+  pathname: string,
+  choice?: OnboardingChoice | null,
+): string {
+  const match = matchRoute(pathname);
+  if (!match) return "Daisy.work";
+  if (isWorker(choice) && match.route.href === ROUTES.work.href) {
+    return match.title === ROUTES.work.title ? "My work" : match.title;
+  }
+  return match.title;
 }
 
 /**

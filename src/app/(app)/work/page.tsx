@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
-import { ChevronRight, MapPin, Search } from "lucide-react";
+import { ChevronRight, Search } from "lucide-react";
 
 import { AdSlot } from "@/components/daisy/ad-slot";
 import {
@@ -141,11 +140,7 @@ function CustomerWorkPage() {
 }
 
 function WorkerWorkDashboard() {
-  const [q, setQ] = useState("");
   const { data: mine = [], isLoading: mineLoading } = api.work.list.useQuery();
-  const { data: jobs = [], isLoading: jobsLoading } = api.work.browse.useQuery(
-    q.trim() ? { q: q.trim() } : undefined,
-  );
   const { data: appData, isLoading: appsLoading } =
     api.application.mine.useQuery();
 
@@ -155,11 +150,11 @@ function WorkerWorkDashboard() {
   return (
     <>
       <PageHeader
-        title="Requests"
-        description="Inbound service requests and open jobs you can apply to."
+        title="My work"
+        description="Jobs assigned to you and applications you’ve sent."
         actions={
           <Button asChild variant="outline" className="min-h-11">
-            <Link href="/services">Your services</Link>
+            <Link href="/services">Offer</Link>
           </Button>
         }
       />
@@ -215,7 +210,11 @@ function WorkerWorkDashboard() {
           <Skeleton className="h-20 rounded-xl" />
         ) : applications.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No applications yet. Browse open jobs below.
+            No applications yet. Find work to apply to under{" "}
+            <Link href="/marketplace?scope=jobs" className="underline">
+              Find work
+            </Link>
+            .
           </p>
         ) : (
           <ul className="divide-border border-border bg-card divide-y overflow-hidden rounded-xl border">
@@ -232,78 +231,6 @@ function WorkerWorkDashboard() {
                     <p className="text-muted-foreground text-xs capitalize">
                       {app.status}
                     </p>
-                  </div>
-                  <ChevronRight
-                    className="text-muted-foreground size-4 shrink-0"
-                    aria-hidden
-                  />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="space-y-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-muted-foreground text-sm font-medium">
-            Open jobs
-          </h2>
-          <div className="relative min-w-0 sm:max-w-xs">
-            <Search
-              className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
-              aria-hidden
-            />
-            <Input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search open jobs"
-              className="h-11 pl-9"
-            />
-          </div>
-        </div>
-
-        {jobsLoading ? (
-          <Skeleton className="h-40 rounded-xl" />
-        ) : jobs.length === 0 ? (
-          <EmptyState
-            title="No open jobs"
-            description="Custom jobs appear here when customers post them publicly."
-            action={
-              <Button asChild variant="outline">
-                <Link href="/marketplace">Browse marketplace</Link>
-              </Button>
-            }
-          />
-        ) : (
-          <ul className="divide-border border-border bg-card divide-y overflow-hidden rounded-xl border">
-            {jobs.slice(0, 12).map((wo) => (
-              <li key={wo.id}>
-                <Link
-                  href={`/work/${wo.id}`}
-                  className="hover:bg-muted/40 focus-visible:ring-ring flex min-h-14 items-center gap-3 px-4 py-3 outline-none focus-visible:ring-2"
-                >
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <p className="truncate text-sm font-medium">{wo.title}</p>
-                    <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
-                      <span className="tabular-nums">
-                        {formatMoney(wo.budgetAmount, wo.currency)}
-                      </span>
-                      <span className="capitalize">
-                        {wo.workMode.replaceAll("_", " ")}
-                      </span>
-                      {wo.location?.label ? (
-                        <span className="inline-flex items-center gap-1">
-                          <MapPin className="size-3" aria-hidden />
-                          {wo.location.label}
-                        </span>
-                      ) : null}
-                      <span>
-                        {formatDistanceToNow(wo.createdAt, {
-                          addSuffix: true,
-                        })}
-                      </span>
-                    </div>
                   </div>
                   <ChevronRight
                     className="text-muted-foreground size-4 shrink-0"

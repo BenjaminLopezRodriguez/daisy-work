@@ -28,6 +28,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { BudgetType, formatMoney, WorkMode } from "@/domain";
+import { isWorker } from "@/lib/daisy/role";
 import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
 
@@ -65,13 +66,16 @@ type BrowseState = {
   sort: Sort;
 };
 
-function useBrowseState() {
+function useBrowseState(defaultScope: Scope) {
   const sp = useSearchParams();
   const router = useRouter();
 
   const raw = (k: string) => sp.get(k) ?? undefined;
   const state: BrowseState = {
-    scope: scopeParam.parse(raw("scope")),
+    // An absent `scope` follows the viewer's mode: a provider browsing came
+    // here to find work, not to shop for other providers' services. Derived
+    // only — rewriting the URL would make the tabs fight the back button.
+    scope: raw("scope") ? scopeParam.parse(raw("scope")) : defaultScope,
     q: textParam.parse(raw("q")) ?? "",
     cat: textParam.parse(raw("cat")),
     mode: modeParam.parse(raw("mode")),
@@ -348,7 +352,12 @@ function FilterGroups({
 const RESULTS_ID = "browse-results";
 
 function MarketplaceBrowse() {
-  const state = useBrowseState();
+  // Public page: `me.get` returns null when signed out, so this stays usable
+  // without an auth gate.
+  const { data: me } = api.me.get.useQuery();
+  const provider = isWorker(me?.onboardingChoice);
+
+  const state = useBrowseState(provider ? "jobs" : "services");
   const { scope, q, cat, mode, min, max, sort, write } = state;
   const [sheetOpen, setSheetOpen] = useState(false);
   /** What the last parse inferred, so it can be shown and undone (§task 2). */
@@ -520,10 +529,18 @@ function MarketplaceBrowse() {
     <AppPage width="form" className="max-w-6xl space-y-8">
       <PageHeader
         title="Marketplace"
-        description="Browse packaged services first. Open jobs are for custom work."
+        description={
+          provider
+            ? "Open jobs you can apply to. Services are what other providers offer."
+            : "Browse packaged services first. Open jobs are for custom work."
+        }
         actions={
           <Button asChild className="min-h-11">
-            <Link href="/create">What do you need?</Link>
+            {/* Posting a job is the customer's action; a provider standing here
+                wants to list what they do. */}
+            <Link href={provider ? "/services" : "/create"}>
+              {provider ? "Offer a service" : "What do you need?"}
+            </Link>
           </Button>
         }
       />

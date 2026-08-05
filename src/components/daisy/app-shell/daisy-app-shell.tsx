@@ -23,7 +23,7 @@ export function DaisyAppShell({
   children: ReactNode;
 }) {
   const pathname = usePathname();
-  const title = titleForPath(pathname);
+  const title = titleForPath(pathname, onboardingChoice);
 
   return (
     <TooltipProvider delayDuration={0}>
