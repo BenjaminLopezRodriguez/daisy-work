@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
@@ -71,19 +71,84 @@ export function LandingView() {
     setCategory(null);
   };
 
+  // Airbnb's collapsing search: once the hero box scrolls away, a compact
+  // version of it takes over the header so search is never out of reach.
+  const heroRef = useRef<HTMLFormElement>(null);
+  const promptRef = useRef<HTMLTextAreaElement>(null);
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setCollapsed(!entry?.isIntersecting),
+      // Fire once the hero is behind the header rather than fully gone.
+      { rootMargin: "-72px 0px 0px 0px", threshold: 0 },
+    );
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+
+  const expandSearch = () => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches;
+    window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+    promptRef.current?.focus({ preventScroll: true });
+  };
+
   return (
     <div className="min-h-dvh bg-background text-foreground">
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-5 sm:px-6">
-        <Link href="/" className="text-base font-semibold tracking-tight">
-          Daisy<span className="text-primary">.work</span>
-        </Link>
-        <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/signin">Sign in</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link href="/create">Get started</Link>
-          </Button>
+      <header
+        className={cn(
+          "sticky top-0 z-40",
+          "motion-safe:transition-colors motion-safe:duration-200",
+          collapsed
+            ? "border-b border-border bg-background shadow-sm"
+            : "border-b border-transparent bg-background",
+        )}
+      >
+        <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-3 sm:px-6">
+          <Link
+            href="/"
+            className="shrink-0 text-base font-semibold tracking-tight"
+          >
+            Daisy<span className="text-primary">.work</span>
+          </Link>
+
+          {/* Takes over from the hero box once it scrolls out of view. */}
+          <div
+            className={cn(
+              "min-w-0 flex-1 motion-safe:transition-opacity motion-safe:duration-200",
+              collapsed
+                ? "opacity-100"
+                : "pointer-events-none opacity-0",
+            )}
+            aria-hidden={!collapsed}
+          >
+            <button
+              type="button"
+              onClick={expandSearch}
+              tabIndex={collapsed ? 0 : -1}
+              className={cn(
+                "mx-auto flex min-h-10 w-full max-w-sm items-center gap-2 rounded-full border border-border bg-card px-4 text-left shadow-sm",
+                "hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+              )}
+            >
+              <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+              <span className="truncate text-sm text-muted-foreground">
+                {prompt.trim() || searchQuery || "What do you need done?"}
+              </span>
+            </button>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/signin">Sign in</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/create">Post a job</Link>
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -100,6 +165,7 @@ export function LandingView() {
           </div>
 
           <form
+            ref={heroRef}
             className="rounded-2xl border border-border bg-card p-3 text-left shadow-sm"
             onSubmit={(e) => {
               e.preventDefault();
@@ -107,6 +173,7 @@ export function LandingView() {
             }}
           >
             <Textarea
+              ref={promptRef}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => {
