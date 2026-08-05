@@ -44,7 +44,11 @@ yarn-error.log*
 
 # idea files
 .idea
+
+# Every env file is ignored except the placeholder template. Real values have
+# been committed here once already — keep it that way.
 .env*
+!.env.example
 
 # pnpm content-addressable store (must never be committed)
 .pnpm-store/
